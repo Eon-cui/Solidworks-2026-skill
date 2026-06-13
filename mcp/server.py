@@ -14,9 +14,14 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 import asyncio
+import glob as _glob
+import json as _json
 import math
 import os
-import time
+import re as _re
+import time as _time  # only for sync _safe_com_call; async paths use asyncio.sleep
+import traceback
+from collections import Counter
 
 from mcp.server.fastmcp import FastMCP
 
@@ -54,13 +59,12 @@ def _find_template(doc_type="part"):
         if path and os.path.exists(path):
             return path
     except Exception:
-        pass
+        traceback.print_exc()
     # Fallback: search known locations
     search_dirs = [
         r"C:\ProgramData\SolidWorks\SOLIDWORKS 2026\templates",
         r"C:\ProgramData\SolidWorks\SOLIDWORKS *\templates",
     ]
-    import glob as _glob
     for search_dir in search_dirs:
         for candidate in _glob.glob(os.path.join(search_dir, pattern)):
             if os.path.isfile(candidate):
@@ -115,7 +119,7 @@ def _empty_dispatch():
 def _byref_int(default=0):
     """VARIANT(VT_BYREF|VT_I4, default) — by-ref 整数"""
     if not HAS_COM:
-        return default
+        return type('_ByrefInt', (), {'value': default, '__int__': lambda s: s.value})()
     from win32com.client import VARIANT
     return VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, default)
 
@@ -132,8 +136,30 @@ def _safe_com_call(func, *args, retries=3, delay=0.3, **_kwargs):
         except Exception as e:
             last_err = e
             if attempt < retries - 1:
-                time.sleep(delay * (attempt + 1))
+                _time.sleep(delay * (attempt + 1))
     raise last_err
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Security: output path validation + input size limits
+# ═══════════════════════════════════════════════════════════════════
+
+_SW_OUTPUT_DIR = os.environ.get("SW_OUTPUT_DIR", os.path.join(os.getcwd(), "output"))
+MAX_JSON_SIZE = 10 * 1024 * 1024     # 10MB — JSON input limit
+MAX_STEP_SIZE = 100 * 1024 * 1024    # 100MB — STEP file read limit
+
+
+def _validate_output_path(path: str) -> str:
+    """Validate output path is within SW_OUTPUT_DIR. Returns realpath, raises PermissionError on violation."""
+    real = os.path.normcase(os.path.realpath(os.path.abspath(path)))
+    allowed = os.path.normcase(os.path.realpath(_SW_OUTPUT_DIR))
+    if not real.startswith(allowed + os.sep) and real != allowed:
+        raise PermissionError(
+            f"Output path '{path}' resolves to '{real}' which is outside "
+            f"allowed directory '{allowed}'. Set SW_OUTPUT_DIR env var to change."
+        )
+    os.makedirs(os.path.dirname(real), exist_ok=True)
+    return real
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -163,7 +189,7 @@ def _init_com():
         try:
             pythoncom.CoInitialize()
         except Exception:
-            pass
+            traceback.print_exc()
 
 
 def _get_sw():
@@ -189,7 +215,7 @@ def _get_sw():
         rev = _com_attr(sw_app, 'RevisionNumber')
         return sw_app
     except Exception:
-        pass
+        traceback.print_exc()
     # 没有运行中的实例 → 启动新的
     sw_app = Dispatch("SldWorks.Application")
     sw_app.Visible = True
@@ -374,7 +400,7 @@ async def sw_new_part(template: str = "") -> str:
         doc = sw.ActiveDoc
         if doc is not None:
             break
-        time.sleep(0.3)
+        await asyncio.sleep(0.3)
     if doc is None:
         return f"新建失败 (模板={template})，SW 未返回活动文档"
     return f"新建: {_com_attr(doc, 'GetTitle')}"
@@ -389,7 +415,7 @@ async def sw_new_assembly(template: str = "") -> str:
         if not template:
             return "找不到装配体模板"
     doc = sw.NewAssembly(template)
-    time.sleep(0.5)
+    await asyncio.sleep(0.5)
     return f"新建: {_com_attr(doc, 'GetTitle')}"
 
 
@@ -402,7 +428,7 @@ async def sw_new_drawing(template: str = "") -> str:
         if not template:
             return "找不到工程图模板"
     doc = sw.NewDrawing(template)
-    time.sleep(0.5)
+    await asyncio.sleep(0.5)
     return f"新建: {_com_attr(doc, 'GetTitle')}"
 
 
@@ -1028,7 +1054,7 @@ async def sw_get_mass_properties() -> str:
     """质量属性（SW2026 COM 中 GetMassProperties 参数签名不兼容，返回包围盒估算）。"""
     model = _get_model()
     _com_attr(model, 'EditRebuild3')
-    time.sleep(0.3)
+    await asyncio.sleep(0.3)
     # SW2026: GetMassProperties COM 签名不兼容，用包围盒替代
     try:
         bb = model.Extension.GetBox(0)
@@ -1040,7 +1066,7 @@ async def sw_get_mass_properties() -> str:
             est_mass = vol_mm3 * 2.7 / 1000  # 铝密度 2.7g/cm³ 粗略估算
             return f"包围盒={dx:.1f}×{dy:.1f}×{dz:.1f}mm | 体积≈{vol_mm3:.0f}mm³ | 质量≈{est_mass:.1f}g (铝估算)"
     except Exception:
-        pass
+        traceback.print_exc()
     return "质量属性不可用 (SW2026 COM 限制)，请在 SW GUI 中查看"
 
 
@@ -1114,11 +1140,6 @@ async def sw_switch_config(name: str) -> str:
 # ═══════════════════════════════════════════════════════════════════
 # Category 11: 视图操作 (10 tools)
 # ═══════════════════════════════════════════════════════════════════
-
-VIEW_MAP = {
-    "front": "*前视", "top": "*上视", "right": "*右视",
-    "back": "*后视", "bottom": "*下视", "iso": "*等轴测"
-}
 
 @mcp.tool()
 async def sw_view_front() -> str:
@@ -1293,9 +1314,9 @@ async def sw_review_all_views() -> str:
     for name, view_name in views:
         try:
             model.ShowNamedView2(view_name, -1)
-            time.sleep(0.3)
+            await asyncio.sleep(0.3)
         except Exception:
-            pass
+            traceback.print_exc()
     model.ViewZoomtofit2()
     return f"已审查 7 个视图"
 
@@ -1317,7 +1338,7 @@ async def sw_review_check_blank() -> str:
                     if feat.IsSuppressed():
                         issues.append(f"⚠️ 压缩: {fname} ({ftype})")
             except Exception:
-                pass
+                traceback.print_exc()
             feat = feat.GetNextFeature()
         if not issues:
             return f"✅ 无问题 (共 {count} 个特征)"
@@ -1410,7 +1431,7 @@ async def sw_gear_create(joint: str = "J1", which: str = "both", segments: int =
             doc = sw.ActiveDoc
             if doc is not None:
                 break
-            time.sleep(0.3)
+            await asyncio.sleep(0.3)
         if doc is None:
             results.append(f"{joint} {label} 创建文档失败")
             continue
@@ -1490,7 +1511,7 @@ async def sw_gear_create(joint: str = "J1", which: str = "both", segments: int =
         sm.CreateCircleByRadius(0, 0, 0, bore / 2)
 
         doc.InsertSketch2(True)
-        time.sleep(0.3)
+        await asyncio.sleep(0.3)
 
         fm = doc.FeatureManager
         _safe_com_call(fm.FeatureExtrusion2,
@@ -1501,8 +1522,8 @@ async def sw_gear_create(joint: str = "J1", which: str = "both", segments: int =
 
         # 重建 + 缩放以显示模型
         doc.ClearSelection2(True)
-        doc.EditRebuild3
-        time.sleep(0.3)
+        _com_attr(doc, 'EditRebuild3')
+        await asyncio.sleep(0.3)
         doc.ViewZoomtofit2()
 
         results.append(f"{joint} {label} Z{z} pd={pd*1000:.1f}mm")
@@ -1607,8 +1628,7 @@ async def sw_verify_step_geometry(step_path: str, expected_holes: str = "") -> s
 
     返回: 半径分布 + BBox + 与期望对比。
     """
-    import re as _re
-    import json as _json
+    # (re + json imported at module level)
     from collections import Counter
 
     if not os.path.exists(step_path):
@@ -1670,7 +1690,6 @@ async def sw_asm_add_component_posed(path: str, transform16: str) -> str:
       - MathUtility/Component2 dynamic 解析失败 → gen_py 手动包装
       - Transform2 是对象属性 → DISPATCH_PROPERTYPUTREF (DISPID 78), makepy put 会"找不到成员"
     """
-    import json as _json
     import win32com.client.gencache as _gc
     arr = _json.loads(transform16)
     if len(arr) != 16:
@@ -1697,8 +1716,6 @@ async def sw_asm_verify_poses(step_path: str, expected_json: str, tol_mm: float 
     expected_json: [[label, [tx,ty,tz](mm), [zx,zy,zz]], ...]
     解析 ITEM_DEFINED_TRANSFORMATION — 组件位姿在第一个 placement (第二个是恒等参考系)。
     """
-    import json as _json
-    import re as _re
     expects = _json.loads(expected_json)
     if not os.path.exists(step_path):
         return f"❌ 文件不存在: {step_path}"
