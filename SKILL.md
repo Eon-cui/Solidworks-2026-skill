@@ -56,17 +56,17 @@ print(report); assert ok
 
 | 需求 | 脚本 | 参考文档 |
 |------|------|----------|
-| 环境自检（依赖+SW 安装） | `scripts/sw_preflight.py` | `references/troubleshooting.md` |
-| 会话管理（with 清场/面数追踪/genmod） | `scripts/sw_session.py` | `references/com-patterns.md` |
-| 连接/打开/新建/模板查找 | `scripts/sw_connect.py` | — |
-| 零件建模（草图+特征，修复版） | `scripts/sw_part.py` | `references/part-modeling.md` |
-| 装配体（位姿级插入 add_component_posed） | `scripts/sw_assembly.py` | `references/assembly.md` |
-| 配合（程序化面选择 mate） | `scripts/sw_mate.py` | `references/assembly.md` |
-| 验收（STEP 几何/面数/装配位姿/7D3S） | `scripts/sw_verify.py` | `references/verification.md` |
-| 跨零件接口交叉校验 | `scripts/sw_check_interfaces.py` | `references/verification.md` |
-| 导出 STEP/STL/PDF/DXF | `scripts/sw_export.py` | — |
-| VBA 宏防护（大模型生成宏时） | `scripts/sw_macro_guard.py` | — |
-| 工程图/运动算例/审查/外观 ⚠未实测 | `scripts/sw_drawing/motion/review/appearance.py` | `references/upstream/` |
+| 环境自检（依赖+SW 安装） | `sw_2026_skill/sw_preflight.py` | `references/troubleshooting.md` |
+| 会话管理（with 清场/面数追踪/genmod） | `sw_2026_skill/sw_session.py` | `references/com-patterns.md` |
+| 连接/打开/新建/模板查找 | `sw_2026_skill/sw_connect.py` | — |
+| 零件建模（草图+特征，修复版） | `sw_2026_skill/sw_part.py` | `references/part-modeling.md` |
+| 装配体（位姿级插入 add_component_posed） | `sw_2026_skill/sw_assembly.py` | `references/assembly.md` |
+| 配合（程序化面选择 mate） | `sw_2026_skill/sw_mate.py` | `references/assembly.md` |
+| 验收（STEP 几何/面数/装配位姿/7D3S） | `sw_2026_skill/sw_verify.py` | `references/verification.md` |
+| 跨零件接口交叉校验 | `sw_2026_skill/sw_check_interfaces.py` | `references/verification.md` |
+| 导出 STEP/STL/PDF/DXF | `sw_2026_skill/sw_export.py` | — |
+| VBA 宏防护（大模型生成宏时） | `sw_2026_skill/sw_macro_guard.py` | — |
+| 工程图/运动算例/审查/外观 ⚠未实测 | `sw_2026_skill/sw_drawing/motion/review/appearance.py` | `references/upstream/` |
 | COM API 哪些能用哪些废 | — | `references/com-api-table.md` |
 | COM 调用三件套（VARIANT/gen_py/PUTREF） | — | `references/com-patterns.md` |
 | 排障 | — | `references/troubleshooting.md` |
@@ -77,7 +77,7 @@ print(report); assert ok
 | 场景 | 用哪个 |
 |------|--------|
 | AI 客户端（Claude Desktop/Codex/Cursor）交互式操控 SW | **MCP**: `python mcp/server.py`（stdio）。121 tools，单进程持久连接，内置全部验证签名 |
-| 批量建模/装配/验收脚本（可重复执行的 build 脚本） | **直接 import scripts/**。一个 Python 进程跑完全部操作，避免多进程多 SW 实例 |
+| 批量建模/装配/验收脚本（可重复执行的 build 脚本） | **直接 import sw_2026_skill/**。一个 Python 进程跑完全部操作，避免多进程多 SW 实例 |
 | 一次性小操作 | 直接 import；MCP 启动成本不值 |
 
 MCP 启动：`python SKILL_DIR/mcp/server.py`（stdio, 自带入口）。
