@@ -31,6 +31,21 @@ metadata: { "os": ["win32"], "requires": { "anyBins": ["python", "py"], "sw": "S
 - 装配 STEP 位姿在 `ITEM_DEFINED_TRANSFORMATION` 的**第一个** AXIS2_PLACEMENT_3D（第二个是恒等参考系）
 - `GetBodies3` early-bound 返回 `(bodies, info)` tuple，先解包
 - SLDPRT 覆盖保存被文件锁挡 → 保存前先删除旧文件或 CloseAllDocuments
+- **坐标系 Y-up**（GB 模板默认）：TOP 平面法向 Y，FRONT 法向 Z。`find_plane_face(axis_idx=1)` = Y-up 面。ANSI 模板为 Z-up，需对应调整 axis_idx
+
+## 建模韧性协议
+
+COM 调用失败 / 返回 None 时，按以下顺序处理。**禁止第一步就简化几何设计。**
+
+1. **读错误** — 区分"参数错误" vs "几何不可能" vs "COM 静默失败"
+2. **查文档** — `references/com-api-table.md`（是否已知不可用 API）
+3. **自动重试** — cut/extrude 已内置方向+Flip 矩阵，不要手工重复
+4. **换面选择** — 坐标选面失败（`face()`）→ `find_cyl_face()` / `find_plane_face()` 程序化选面
+5. **换基准面** — 面草图失败 → 基准面 + 控制 extrude 方向
+6. **诊断几何** — `verify_step()` 查看 STEP 中实际生成了什么（铁律 #3）
+7. **最小调整** — 以上全失败，才改几何参数（位置、尺寸），不改拓扑结构
+
+面数追踪（`check_faces`）每条特征必做。控制台 OK ≠ 特征生效。
 
 ## 快速开始
 

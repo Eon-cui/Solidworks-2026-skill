@@ -87,5 +87,19 @@
         → 成功模式立即封装进 sw_2026_skill/ + 记入本文档
 ```
 
+## I. 面选择策略
+
+`SelectByID2` 是视线射线拾取（模拟鼠标点击），非 3D 最近面搜索。在以下场景中会选错面或选不到面：
+
+| 场景 | 推荐方法 | 原因 |
+|------|---------|------|
+| 单体零件、大平面 | `SW.face(x,y,z)` — SelectByID2 坐标 | 最快，坐标容错大 |
+| 多体零件、窄面 | `find_plane_face(axis_idx, pos_mm)` | 坐标射线不可靠（多体遮挡） |
+| 装配 mate — 圆柱面 | `find_cyl_face(comp_e, radius_mm)` | 确定性最强，按半径匹配 |
+| 装配 mate — 平面 | `find_plane_face(comp_e, axis_idx, pos_mm)` | 按法向+位置匹配 |
+| 同半径多孔 | `find_cyl_face_at(comp_e, r, axis_idx, pos_mm)` | 按局部坐标区分 |
+
+**坐标系说明：** GB 模板默认 Y-up（TOP 平面法向 Y，`find_plane_face(axis_idx=1)` = 顶面）。ANSI 模板为 Z-up，需对应调整 `axis_idx`（0=X, 1=Y, 2=Z）。
+
 诊断"找不到成员"顺序：gen_py 包装 → PUTREF → 才怀疑 API 不存在。
 嫌 API 复杂想绕路 = 危险信号，正路通常 3 步内可破。
