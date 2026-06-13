@@ -212,23 +212,25 @@ class SW:
         return f
 
     def cut(self, depth=0, through_all=False):
-        """FeatureCut3 26 参数 — 铁律 Flip=F/NormalCut=F (违反 → 静默失败/反切)。
-        Dir 自动重试: 底面草图法向翻转时 Dir=False 朝空气切 → None → 换 Dir=True。"""
+        """FeatureCut3 26 参数 — 铁律 NormalCut=False。
+        4 路重试: (flip, direction) 矩阵。Flip=True 仅最后手段(可能反切主体!)"""
         t1 = 1 if through_all else 0
         d1 = 0.001 if through_all else M(depth)
-        for direction in (False, True):
+        for flip, direction in [(False,False), (False,True), (True,False), (True,True)]:
             f = self.fm.FeatureCut3(
-                True, False, direction, t1, 0, d1, 0.0,
+                True, flip, direction, t1, 0, d1, 0.0,
                 False, False, False, False, 0.0, 0.0,
                 False, False, False, False,
                 False,  # NormalCut=False 铁律!
                 True, True, True, True, False,
                 0, 0.0, False)
             if f is not None:
-                if direction:
-                    print("     (cut: Dir 翻转生效)")
+                if flip or direction:
+                    print(f"     (cut: flip={flip} dir={direction})")
+                if flip:
+                    print("     ⚠ Flip=True 生效 — 务必 verify_step 验证几何!")
                 return f
-        raise RuntimeError(f"FeatureCut3 双向均 None (d={depth},thru={through_all})")
+        raise RuntimeError(f"FeatureCut3 四路均 None (d={depth},thru={through_all})")
 
     def fillet_edges(self, edges_mm, r):
         """边圆角。edges: [(x,y,z)mm 边中点]"""
