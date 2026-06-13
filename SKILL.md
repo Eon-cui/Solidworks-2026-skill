@@ -1,6 +1,6 @@
 ---
 name: sw-2026-skill
-description: "SW2026 大一统自动化技能 — Python COM 操控 SolidWorks 2026 进行零件建模、装配体、配合、验收与导出。融合 UR-SEU-2026 项目 27 条实战踩坑：FeatureCut3 验证签名、Transform2 PUTREF 装配位姿、程序化面选择 mate、STEP 几何级防假成功验收。当用户提到 SolidWorks、SW、CAD、零件、装配、mate、STEP/STL 导出、几何验收时使用。"
+description: "Use when the user mentions SolidWorks, SW, CAD modeling, part design, assembly, mates, STEP/STL/PDF export, geometric verification, or needs to automate any CAD task on Windows with SolidWorks 2026 installed. Also use when encountering SW COM errors like 'member not found', FeatureCut silent failure, or Transform2 pose issues."
 metadata: { "os": ["win32"], "requires": { "anyBins": ["python", "py"], "sw": "SolidWorks 2026 (2024+ 大部分兼容)" } }
 ---
 
@@ -66,7 +66,7 @@ print(report); assert ok
 | 跨零件接口交叉校验 | `sw_2026_skill/sw_check_interfaces.py` | `references/verification.md` |
 | 导出 STEP/STL/PDF/DXF | `sw_2026_skill/sw_export.py` | — |
 | VBA 宏防护（大模型生成宏时） | `sw_2026_skill/sw_macro_guard.py` | — |
-| 工程图/运动算例/审查/外观 ⚠未实测 | `sw_2026_skill/sw_drawing/motion/review/appearance.py` | `references/upstream/` |
+| 工程图/运动算例/审查/外观 ⚠未实测 | `sw_2026_skill/_untested/` | `references/upstream/` |
 | COM API 哪些能用哪些废 | — | `references/com-api-table.md` |
 | COM 调用三件套（VARIANT/gen_py/PUTREF） | — | `references/com-patterns.md` |
 | 排障 | — | `references/troubleshooting.md` |
