@@ -11,8 +11,7 @@ COM safety layers:
 """
 
 import sys
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-
+# stdout configured by sw_2026_skill._compat
 import asyncio
 import glob as _glob
 import json as _json
@@ -77,7 +76,7 @@ mcp = FastMCP("solidworks-mcp")
 
 # ── Tool Annotations (MCP spec 2025-03-26) ─────────────────────────
 _ANNO_READONLY = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False}
-_ANNO_DEFAULT  = {"readOnlyHint": False, "destructiveHint": True, "idempotentHint": False, "openWorldHint": True}
+# _ANNO_DEFAULT matches MCP spec defaults — no need to explicitly apply to 97 tools
 
 READONLY_TOOLS = {
     # Verification

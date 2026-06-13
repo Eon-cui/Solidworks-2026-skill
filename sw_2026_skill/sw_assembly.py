@@ -12,8 +12,7 @@ vs 开源版核心差异:
 精确 mate (多实例/同半径多孔/局部坐标过滤) → 用 sw_mate.py。
 """
 import sys
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-
+# stdout configured by sw_2026_skill._compat
 import glob
 import os
 import math

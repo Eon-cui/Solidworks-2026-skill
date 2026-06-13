@@ -6,7 +6,7 @@ SolidWorks 结果自审查工具。
     或导出的 BMP 判断几何是否符合用户意图。
 """
 import sys
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+# stdout configured by sw_2026_skill._compat
 """[来自上游 solidworks-automation-skill, 未经 UR-SEU-2026 实测 — 使用前按 references/com-patterns.md 模式 4 验证关键签名]"""
 
 import os

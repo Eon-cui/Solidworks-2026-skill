@@ -13,8 +13,7 @@ sw_mate.py — 程序化面选择 mate 自动化 (SW2026 装配实战验证)
   - align=2 (closest) 让解算器保持当前位置
 """
 import sys
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-
+# stdout configured by sw_2026_skill._compat
 try:
     from .sw_session import genmod, untuple, _v
 except ImportError:

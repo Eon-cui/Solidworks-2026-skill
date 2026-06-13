@@ -2,7 +2,7 @@
 SolidWorks 工程图操作工具
 """
 import sys
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+# stdout configured by sw_2026_skill._compat
 """[来自上游 solidworks-automation-skill, 未经 UR-SEU-2026 实测 — 使用前按 references/com-patterns.md 模式 4 验证关键签名]"""
 
 try:

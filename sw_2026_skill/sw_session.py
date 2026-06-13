@@ -10,8 +10,7 @@ sw_session.py — SW2026 会话管理 (with 模式 + 清场 + 面数追踪 + COM
 注意: SW 类的草图/特征接口用 **毫米** (内部转米); 底层 sw_part.py 用米。
 """
 import sys
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-
+# stdout configured by sw_2026_skill._compat
 import os
 import glob
 import math

@@ -17,8 +17,7 @@ sw_check_interfaces.py — 跨零件接口交叉校验 (STEP 解析, 不需要 S
     ck.report()
 """
 import sys
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-
+# stdout configured by sw_2026_skill._compat
 import re
 import math
 

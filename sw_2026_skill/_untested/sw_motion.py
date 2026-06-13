@@ -5,7 +5,7 @@ SolidWorks Motion Study 自动化工具。
 创建匀速旋转马达并触发计算。SolidWorks API 使用米作为长度单位；转速参数使用 RPM。
 """
 import sys
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+# stdout configured by sw_2026_skill._compat
 """[来自上游 solidworks-automation-skill, 未经 UR-SEU-2026 实测 — 使用前按 references/com-patterns.md 模式 4 验证关键签名]"""
 
 import glob

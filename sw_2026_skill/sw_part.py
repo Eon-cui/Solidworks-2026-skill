@@ -10,8 +10,7 @@ vs 开源版修复:
 毫米接口 + 面数追踪 → 用 sw_session.SW 类 (推荐)。
 """
 import sys
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-
+# stdout configured by sw_2026_skill._compat
 import math
 from contextlib import contextmanager
 
