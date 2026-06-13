@@ -40,7 +40,7 @@
 4. **不坐标选面(装配体)** → 程序化 `GetBodies3→GetFaces→CylinderParams→IEntity.Select4`
 5. **不信任控制台 OK** → STEP 几何验收 (`verify_step`)
 6. **async 函数不用 time.sleep** → `await asyncio.sleep()`
-7. **不重复 scripts/ 代码到 server.py** → `from sw_2026_skill import ...`
+7. **不重复 sw_2026_skill/ 代码到 server.py** → `from sw_2026_skill import ...`
 
 ## Tool Annotation Mappings
 
