@@ -75,6 +75,23 @@ def _find_template(doc_type="part"):
 sw_app = None
 mcp = FastMCP("solidworks-mcp")
 
+# ── Tool Annotations (MCP spec 2025-03-26) ─────────────────────────
+_ANNO_READONLY = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False}
+_ANNO_DEFAULT  = {"readOnlyHint": False, "destructiveHint": True, "idempotentHint": False, "openWorldHint": True}
+
+READONLY_TOOLS = {
+    # Verification
+    "sw_count_faces", "sw_verify_step_geometry", "sw_asm_verify_poses",
+    # Query
+    "sw_get_version", "sw_get_feature_count", "sw_get_mass_properties",
+    "sw_measure_distance", "sw_get_bounding_box",
+    "sw_preflight", "sw_review_check_blank",
+    # Views (read-only)
+    "sw_view_front", "sw_view_back", "sw_view_right",
+    "sw_view_top", "sw_view_bottom", "sw_view_isometric",
+    "sw_view_zoom_to_fit",
+}
+
 # ═══════════════════════════════════════════════════════════════════
 # L1: VARIANT wrapping (ALL params, not just optional ones!)
 # ═══════════════════════════════════════════════════════════════════
@@ -103,25 +120,25 @@ def _vi4(v=0):
     return VARIANT(pythoncom.VT_I4, int(v))
 
 
-def _vn():
-    """VARIANT(VT_DISPATCH, None) — 空 Dispatch 参数"""
-    if not HAS_COM:
-        return None
-    from win32com.client import VARIANT
-    return VARIANT(pythoncom.VT_DISPATCH, None)
+# _vn + _byref_int: prefer sw_2026_skill versions, fallback to local
+try:
+    from sw_2026_skill.sw_session import VN as _vn, VBR as _byref_int
+except ImportError:
+    def _vn():
+        """VARIANT(VT_DISPATCH, None) — 空 Dispatch 参数"""
+        if not HAS_COM:
+            return None
+        from win32com.client import VARIANT
+        return VARIANT(pythoncom.VT_DISPATCH, None)
 
+    def _byref_int(default=0):
+        """VARIANT(VT_BYREF|VT_I4, default) — by-ref 整数"""
+        if not HAS_COM:
+            return type('_ByrefInt', (), {'value': default, '__int__': lambda s: s.value})()
+        from win32com.client import VARIANT
+        return VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, default)
 
-def _empty_dispatch():
-    """Deprecated: use _vn() instead"""
-    return _vn()
-
-
-def _byref_int(default=0):
-    """VARIANT(VT_BYREF|VT_I4, default) — by-ref 整数"""
-    if not HAS_COM:
-        return type('_ByrefInt', (), {'value': default, '__int__': lambda s: s.value})()
-    from win32com.client import VARIANT
-    return VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, default)
+_empty_dispatch = lambda: _vn()  # deprecated alias
 
 
 def _safe_com_call(func, *args, retries=3, delay=0.3, **_kwargs):
@@ -253,7 +270,7 @@ def _sel_mgr():
 # Category 1: Preflight & Health (3 tools)
 # ═══════════════════════════════════════════════════════════════════
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_preflight() -> str:
     """运行前检查：COM 依赖 + SW 安装状态。启动任何操作前建议先跑这个。"""
     lines = []
@@ -369,7 +386,7 @@ async def sw_ping() -> str:
         return f"断开: {e}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_get_version() -> str:
     """SW 版本。"""
     return f"SW {_com_attr(_get_sw(), 'RevisionNumber')}"
@@ -1049,7 +1066,7 @@ async def sw_set_transparency(transparent: bool = True) -> str:
 # Category 9: 测量与质量属性 (4 tools)
 # ═══════════════════════════════════════════════════════════════════
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_get_mass_properties() -> str:
     """质量属性（SW2026 COM 中 GetMassProperties 参数签名不兼容，返回包围盒估算）。"""
     model = _get_model()
@@ -1070,7 +1087,7 @@ async def sw_get_mass_properties() -> str:
     return "质量属性不可用 (SW2026 COM 限制)，请在 SW GUI 中查看"
 
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_measure_distance(x1: float, y1: float, z1: float, x2: float, y2: float, z2: float) -> str:
     """两点距离（m→mm）。"""
     if HAS_NUMPY:
@@ -1080,7 +1097,7 @@ async def sw_measure_distance(x1: float, y1: float, z1: float, x2: float, y2: fl
     return f"{d * 1000:.3f} mm"
 
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_get_bounding_box() -> str:
     """包围盒 mm。"""
     bb = _model_ext().GetBox(0)
@@ -1092,7 +1109,7 @@ async def sw_get_bounding_box() -> str:
     return f"{dx:.1f}×{dy:.1f}×{dz:.1f} mm"
 
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_get_feature_count() -> str:
     """特征数量。"""
     model = _get_model()
@@ -1141,37 +1158,37 @@ async def sw_switch_config(name: str) -> str:
 # Category 11: 视图操作 (10 tools)
 # ═══════════════════════════════════════════════════════════════════
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_front() -> str:
     _get_model().ShowNamedView2("*前视", -1)
     return "前视图"
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_top() -> str:
     _get_model().ShowNamedView2("*上视", -1)
     return "上视图"
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_right() -> str:
     _get_model().ShowNamedView2("*右视", -1)
     return "右视图"
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_back() -> str:
     _get_model().ShowNamedView2("*后视", -1)
     return "后视图"
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_bottom() -> str:
     _get_model().ShowNamedView2("*下视", -1)
     return "下视图"
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_isometric() -> str:
     _get_model().ShowNamedView2("*等轴测", -1)
     return "等轴测"
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_zoom_to_fit() -> str:
     _get_model().ViewZoomtofit2()
     return "缩放完成"
@@ -1251,7 +1268,7 @@ async def sw_assembly_collapse() -> str:
 # Category 13: 审查 (5 tools)
 # ═══════════════════════════════════════════════════════════════════
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_review_quick() -> str:
     """快速审查：等轴测视图 + 包围盒 + 特征数 + 质量。"""
     model = _get_model()
@@ -1321,7 +1338,7 @@ async def sw_review_all_views() -> str:
     return f"已审查 7 个视图"
 
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_review_check_blank() -> str:
     """检查是否有空白/空特征。"""
     model = _get_model()
@@ -1597,7 +1614,7 @@ async def sw_quit_doc(title: str = "") -> str:
     return f"✅ 已关闭: {title}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_count_faces() -> str:
     """统计当前零件所有 body 的面数。建模后验证特征是否真实生效。
 
@@ -1618,7 +1635,7 @@ async def sw_count_faces() -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_verify_step_geometry(step_path: str, expected_holes: str = "") -> str:
     """解析 STEP 文件验证几何特征 (防假成功核心工具)。
 
@@ -1709,7 +1726,7 @@ async def sw_asm_add_component_posed(path: str, transform16: str) -> str:
     return f"✅ 组件已插入并定位: {os.path.basename(path)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=_ANNO_READONLY)
 async def sw_asm_verify_poses(step_path: str, expected_json: str, tol_mm: float = 0.1) -> str:
     """装配体 STEP 位姿级验证 (防假成功)。
 
