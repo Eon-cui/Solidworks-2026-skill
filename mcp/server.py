@@ -84,7 +84,7 @@ READONLY_TOOLS = {
     # Query
     "sw_get_version", "sw_get_feature_count", "sw_get_mass_properties",
     "sw_measure_distance", "sw_get_bounding_box",
-    "sw_preflight", "sw_review_check_blank",
+    "sw_preflight", "sw_review_check_blank", "sw_review_quick",
     # Views (read-only)
     "sw_view_front", "sw_view_back", "sw_view_right",
     "sw_view_top", "sw_view_bottom", "sw_view_isometric",
