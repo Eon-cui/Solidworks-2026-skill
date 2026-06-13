@@ -38,25 +38,39 @@ def get_components(asm_model):
     return comps
 
 
-def _iter_faces(comp_e):
-    """组件 body 的全部面 (gen_py IFace2)。GetBodies3 early-bound 返回 tuple!"""
+def _iter_faces(com_obj):
+    """遍历 com_obj 的所有面。支持 IComponent2 / IModelDoc2 / IBody2。
+
+    ⚠ 检测顺序从最具体到最通用：GetBodies3 → GetBodies2 → GetBody。
+    IComponent2 继承 IModelDoc2，两者都有 GetBodies2，先检测 GetBodies3。
+    """
     MOD = genmod()
-    body = None
-    try:
-        body = comp_e.GetBody()       # 装配组件下常 None
-    except Exception:
-        pass
-    if body is None:
-        bodies = untuple(comp_e.GetBodies3(0, 0))
-        if not bodies:
-            return
-        body = bodies[0]
-    be = MOD.IBody2(body._oleobj_)
-    faces = be.GetFaces()
-    if not faces:
-        return
-    for f in faces:
-        yield MOD.IFace2(f._oleobj_)
+    bodies = []
+
+    # IComponent2 — most specific (returns (bodies, info) tuple)
+    if hasattr(com_obj, 'GetBodies3'):
+        result = untuple(com_obj.GetBodies3(0, 0))
+        if result:
+            bodies = list(result)
+
+    # IModelDoc2 — part document (returns tuple of IBody2)
+    if not bodies and hasattr(com_obj, 'GetBodies2'):
+        result = com_obj.GetBodies2(0, True)
+        if result:
+            bodies = list(result)
+
+    # IBody2 or fallback
+    if not bodies and hasattr(com_obj, 'GetBody'):
+        body = com_obj.GetBody()
+        if body is not None:
+            bodies = [body]
+
+    for body in bodies:
+        be = MOD.IBody2(body._oleobj_)
+        faces = be.GetFaces()
+        if faces:
+            for f in faces:
+                yield MOD.IFace2(f._oleobj_)
 
 
 def find_cyl_face(comp_e, radius_mm, tol=0.05):
