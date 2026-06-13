@@ -60,13 +60,7 @@ def get_com_member(obj, attr_name, *args):
         raise
 
 
-def safe_get_com_member(obj, attr_name, *args):
-    """
-    读取 COM 成员，兼容 pywin32 中伪可调用属性。
-
-    保留该别名便于其它模块表达“安全读取”的意图；核心逻辑统一在 get_com_member。
-    """
-    return get_com_member(obj, attr_name, *args)
+safe_get_com_member = get_com_member  # legacy alias — use get_com_member()
 
 
 def create_empty_dispatch_variant():

@@ -19,11 +19,6 @@ import time
 import pythoncom
 from win32com.client import GetActiveObject, VARIANT
 
-# ── FDM 打印公差 (mm) ──
-FIT_HOLE = 0.2     # 孔径放大
-FIT_SHAFT = -0.1   # 轴径缩小
-FIT_PRESS = 0.2    # 压入过盈
-
 SW_TYPELIB = "{83A33D31-27C5-11CE-BFD4-00400513BB57}"
 DISPID_TRANSFORM2 = 78
 
@@ -38,13 +33,12 @@ def VBR():
     return VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
 
 
-def M(mm_val):
-    """毫米 → 米 (SW API 单位)"""
-    return mm_val / 1000.0
-
-
 def mm(value):
+    """毫米 → 米 (SW API 单位)"""
     return value / 1000.0
+
+
+M = mm  # legacy alias — use mm()
 
 
 def deg(value):

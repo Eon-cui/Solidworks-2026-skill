@@ -33,8 +33,15 @@ def _motion_typelib_candidates():
         r"C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS\swmotionstudy.tlb",
         r"C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS*\swmotionstudy.tlb",
         r"C:\Program Files\Dassault Systemes\SOLIDWORKS*\swmotionstudy.tlb",
-        r"E:\Solidworks\SOLIDWORKS\swmotionstudy.tlb",
     ]
+    # Try sw_preflight path resolver first
+    try:
+        from sw_2026_skill.sw_preflight import get_sw_tlb_path
+        path = get_sw_tlb_path("swmotionstudy.tlb")
+        if path:
+            yield path
+    except ImportError:
+        pass
     seen = set()
     for pattern in patterns:
         for path in glob.glob(os.path.expandvars(pattern)):

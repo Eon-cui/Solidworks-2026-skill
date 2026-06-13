@@ -463,11 +463,11 @@ def run_review(model, output_dir, basename="review", views=None, expected_output
         views=views,
         expected_outputs=expected_outputs,
     )
-    report_path = write_review_report(report, output_dir / f"{basename}_review_report.json")
+    report_path = output_dir / f"{basename}_review_report.json"
     summary_path = write_markdown_summary(report, output_dir / f"{basename}_review_summary.md")
-    report["summary_path"] = summary_path
-    write_review_report(report, report_path)
-    return report, report_path
+    report["summary_path"] = str(summary_path)
+    write_review_report(report, report_path)  # single write with summary_path included
+    return report, str(report_path)
 
 
 def _parse_args():

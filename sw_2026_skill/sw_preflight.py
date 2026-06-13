@@ -257,6 +257,49 @@ def main() -> int:
     return 0
 
 
+def get_sw_install_dir() -> str:
+    """SolidWorks installation directory. SW_INSTALL_DIR env var > default search."""
+    env = os.environ.get("SW_INSTALL_DIR", "")
+    if env and os.path.isdir(env):
+        return env
+    for pattern in (
+        r"C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS",
+        r"C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS *",
+    ):
+        for path in glob.glob(pattern):
+            if os.path.isdir(path):
+                return path
+    return ""
+
+
+def get_sw_templates_dir(extra_dirs=None) -> str:
+    """SolidWorks templates directory. SW_TEMPLATES_DIR env var > extra_dirs > default search."""
+    env = os.environ.get("SW_TEMPLATES_DIR", "")
+    if env and os.path.isdir(env):
+        return env
+    for d in (extra_dirs or []):
+        if d and os.path.isdir(d):
+            return d
+    for pattern in (
+        r"C:\ProgramData\SolidWorks\SOLIDWORKS 2026\templates",
+        r"C:\ProgramData\SolidWorks\SOLIDWORKS *\templates",
+    ):
+        for path in glob.glob(pattern):
+            if os.path.isdir(path):
+                return path
+    return ""
+
+
+def get_sw_tlb_path(name="swmotionstudy.tlb") -> str:
+    """Find a SW type library file by name under SW install directory."""
+    install_dir = get_sw_install_dir()
+    if install_dir:
+        for root, _dirs, files in os.walk(install_dir):
+            if name in files:
+                return os.path.join(root, name)
+    return ""
+
+
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
