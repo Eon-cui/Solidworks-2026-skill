@@ -78,14 +78,64 @@
 | 缺 pywin32/comtypes | 环境未装 | `python -m sw_2026_skill.sw_preflight --yes` |
 | 检测不到 SW | 未安装/未注册 COM | 安装后启动一次 SW 完成注册 |
 
-## H. 破案方法论（新坑出现时）
+## H. 系统化修复协议
+
+新坑出现时按此协议走，不要跳步。
+
+### 6 步循环
+
+1. **读错误** — 区分：COM 调用"成功"但几何未生效 (A 类) / dispatch 错误 (B 类) / TYPEMISMATCH (C 类) / 选择失败 (D 类) / 窗口文件 (E 类) / 几何数学 (F 类) / 编码环境 (G 类)
+2. **分类** — 按 8 类故障匹配（见下），找到对应 likely causes
+3. **最小改** — 只改最小范围。改完一步就跑验证，不堆叠修改
+4. **重跑** — 只跑失败的命令，不全量重建
+5. **重验** — 跑了修复后重跑对应的验证（面数 / STEP 几何 / 位姿）
+6. **报剩余风险** — 修了但不确定是否根治的，记入 Assumption Ledger
+
+### 8 类故障
+
+| # | 类 | 症状 | 常见原因 | 诊断 | 修复 | 详见 |
+|---|-----|------|---------|------|------|------|
+| 1 | 源码语法 | ImportError / SyntaxError / 脚本崩 | 缺 import / 拼写错 / 函数签名错 | 读 traceback | 修正语法 | — |
+| 2 | 无效几何 | 草图不闭合 / 零厚度 / 自相交 | 重叠轮廓 / 半径=0 / 共面 | SW 报 "无法生成" | 闭合轮廓 / 正尺寸 / 过切工具 | F 节 |
+| 3 | 倒角失败 | 圆角/倒角特征消失 | 半径>局部边 / 选错边 / 拓扑复杂 | 面数不增长 | 减半径 / 过滤边 / 后置倒角 | A 节 |
+| 4 | 比例错 | 零件尺寸差 1000× | mm/m 混淆 / 直径=半径 | bbox 异常 | mm() 检查 / 包围盒验证 | F 节 |
+| 5 | 特征缺失 | 特征调了但几何没变 | NormalCut=True / FeatureCut4 / Flip=True | 面数不增长 (L2) | FeatureCut3 验证签名 / 单草图策略 | A 节 |
+| 6 | 选择器脆弱 | SelectByID2 返回 False / mate err=0 | 坐标射线选错面 / 点落在孔区 | 同零件两面 → err=0 | 程序化面选择 / 偏移选点 20-30% | D+I 节 |
+| 7 | 定位错 | 装配体姿态全错 | AddComponent5 只平移 / 读了第二 placement | verify_assembly_poses FAIL | Transform2 PUTREF / 读第一 placement | F 节 |
+| 8 | COM 静默失败 | err=0 但无效果 / SaveAs 4KB 空壳 | SaveAs4 bug / dynamic 解析失败 | STEP 几何验收 (L3) | Extension.SaveAs / gen_py 包装 | A+B+C 节 |
+
+### 升级决策树
 
 ```
-怀疑 API → makepy 读真实签名 (com-patterns 模式 4)
-        → 写最小复现 (1 测试零件, try/finally QuitDoc)
-        → 不行就参数/方向布尔矩阵穷举
-        → 成功模式立即封装进 sw_2026_skill/ + 记入本文档
+特征/操作失败
+  ├─ 有 COM 错误码? → B/C 类 → com-patterns.md 三件套 (VARIANT/gen_py/PUTREF)
+  ├─ 调用"成功"但几何不变? → A 类 (假成功)
+  │   ├─ 切除? → 换 FeatureCut3 签名 (Flip=F/Dir=F/NormalCut=F)
+  │   ├─ 阵列? → 单草图策略 (所有实例画进一个草图)
+  │   ├─ STEP 导出 4KB? → Extension.SaveAs + VARIANT
+  │   └─ mate err=0? → 程序化面选择 (D+I 节)
+  ├─ 选不到面/选错面? → D 类
+  │   ├─ 坐标拾取 → 偏移选点 / 换 find_plane_face
+  │   ├─ 装配体 mate → find_cyl_face / find_cyl_face_at
+  │   └─ 都失败 → GetBodies3→GetFaces→CylinderParams 手动匹配
+  └─ 以上全试过仍失败?
+      └─ makepy 读真实签名 (com-patterns.md 模式 4)
+         → 最小复现 (1 测试零件, try/finally QuitDoc)
+         → 参数/方向布尔矩阵穷举
+         → 成功模式立即封装 + 记入本文档对应节
 ```
+
+### 诊断工具速查
+
+| 工具 | 何时用 |
+|------|--------|
+| `makepy` 读签名 | 怀疑参数数目/类型不对 |
+| `check_faces()` (L2) | 怀疑特征未生效 |
+| `verify_step()` (L3) | 怀疑几何不对 |
+| `verify_assembly_poses()` | 怀疑组件位姿错 |
+| `sw_check_interfaces.py` | 怀疑跨零件接口失配 |
+
+> 嫌 API 复杂想绕路 = 危险信号。正路通常 3 步内可破。
 
 ## I. 面选择策略
 

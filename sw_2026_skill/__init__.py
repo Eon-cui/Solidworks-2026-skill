@@ -19,8 +19,16 @@ __all__ = [
     # Verification (pure Python, no SW needed)
     "verify_step", "verify_assembly_poses", "count_faces",
     "score_s1", "score_s2", "verdict_7d3s",
+    "run_validation_pipeline",
     # Interface checking (pure Python, no SW needed)
     "Checker",
+    # Selector references (pure Python)
+    "discover_refs", "write_refs_json", "load_refs", "format_ref",
+    # Snapshot (requires SW + Pillow)
+    "capture_views",
+    # step.parts bridge (optional)
+    "is_step_parts_installed", "search_standard_part",
+    "download_and_import", "create_placeholder_and_record_miss",
     # Preflight
     "get_sw_templates_dir", "get_sw_install_dir",
 ]
@@ -44,7 +52,20 @@ def __getattr__(name):
     if name == "Checker":
         from sw_2026_skill.sw_check_interfaces import Checker
         return Checker
+    if name in ("discover_refs", "write_refs_json", "load_refs", "format_ref"):
+        from sw_2026_skill import sw_selector_refs as _m
+        return getattr(_m, name)
+    if name in ("capture_views",):
+        from sw_2026_skill import sw_snapshot as _m
+        return getattr(_m, name)
+    if name in ("is_step_parts_installed", "search_standard_part",
+                "download_and_import", "create_placeholder_and_record_miss"):
+        from sw_2026_skill import sw_step_parts as _m
+        return getattr(_m, name)
     if name in ("get_sw_templates_dir", "get_sw_install_dir"):
         from sw_2026_skill import sw_preflight as _m
+        return getattr(_m, name)
+    if name == "run_validation_pipeline":
+        from sw_2026_skill import sw_verify as _m
         return getattr(_m, name)
     raise AttributeError(f"module 'sw_2026_skill' has no attribute '{name}'")

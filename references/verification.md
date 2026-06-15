@@ -2,6 +2,30 @@
 
 > 两次假成功事故的教训：**验收强度必须匹配交付物维度**。控制台 OK 验证的是"调用没抛异常"，不是"几何正确"；实例计数验证的是"零件存在"，不是"位姿正确"。
 
+## Validation Pipeline
+
+现有验证工具串成 6 阶段流水线。**Stage N 失败 → 停止，不跳级。** 每阶段工具和详见见下表，具体实现见后续各节。
+
+| Stage | 做什么 | 工具 | 失败现象 | 详见 |
+|:-----:|--------|------|----------|------|
+| 0 | 文件有效性 + 面数追踪 | `SW.check_faces()` | 面数不增长 / 文件<100KB | [三层防御](#三层防御建模时) |
+| 1 | STEP 圆柱面半径分布 | `verify_step()` | 孔数/孔径不匹配 | [三层防御 L3](#三层防御建模时) |
+| 2 | 装配体位姿矩阵 | `verify_assembly_poses()` | origin 偏移>0.1mm / Z轴偏差>0.01 | [装配位姿验证原理](#装配位姿验证原理) |
+| 3 | 跨零件接口 PCD/角度/孔径 | `sw_check_interfaces.py` | PCD 不匹配 / 孔数不一致 | [跨零件接口交叉校验](#跨零件接口交叉校验) |
+| 4 | 视觉复核 | `SW.snapshot()` → Pillow | 肉眼可见的几何异常 | [snapshot-review.md](snapshot-review.md) |
+| 5 | 7D3S 量化评分 | `score_s1()` / `score_s2()` | 评分<24 / 任一维度 0 分 | [7D3S 框架](#7d3s-框架零件级量化验收) |
+
+**使用方式：**
+
+```python
+from sw_2026_skill.sw_verify import run_validation_pipeline
+
+result = run_validation_pipeline(sldprt_path, step_path, expected_spec)
+# → {'stage': 'S2', 'passed': False, 'report': '❌ J1C: 期望 t=(0,78,0) 未匹配'}
+```
+
+`expected_spec` 格式见 `run_validation_pipeline` 的 docstring。
+
 ## 验收维度对照表（铁律）
 
 | 交付物 | 最低验收 | 工具 |

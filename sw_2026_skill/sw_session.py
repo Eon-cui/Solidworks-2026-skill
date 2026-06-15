@@ -261,3 +261,8 @@ class SW:
             raise RuntimeError(f"保存失败 sld={ok1} stp={ok2}")
         print(f"   ✓ 已保存 {name}.SLDPRT + .STEP")
         return sld, stp
+
+    def snapshot(self, out_dir: str, name: str) -> list[str]:
+        """强制视觉复核 — 标准 4 视图 PNG。依赖 Pillow。"""
+        from sw_2026_skill.sw_snapshot import capture_views
+        return capture_views(self.model, out_dir, name)
