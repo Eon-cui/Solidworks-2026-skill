@@ -4,7 +4,7 @@ sw_check_interfaces.py — 跨零件接口交叉校验 (STEP 解析, 不需要 S
 场景: 接口参数 (PCD/孔径/方距) 散落在多个零件 — 人工比对不可靠。
 模式: 每个零件 STEP 解析圆柱面轴心 → 按半径+轴向取孔心 → 算 PCD/角度 → 配对断言。
 
-铁律: 接口检查必须随设计版本同跑 (改接口 → build 脚本+期望值+文档三处同步 → 跑校验)。
+铁律: 接口检查必须随设计版本同跑 (改接口 → build 脚本+expected值+文档三处同步 → 跑校验)。
 陈年失配案例: 孔从 A 零件移到 B 零件后, 校验脚本 3 个版本还在查 A — 一直"假 PASS"。
 
 用法 (写你自己的 check 脚本):
@@ -102,7 +102,7 @@ class Checker:
     def eq(self, label, got, want, tol=0.1):
         ok = got is not None and abs(got - want) <= tol
         self.results.append(ok)
-        print(f"  {'✅' if ok else '❌'} {label}: {got} (期望 {want})")
+        print(f"  {'✅' if ok else '❌'} {label}: {got} (expected {want})")
         return ok
 
     def true(self, label, cond):
@@ -117,6 +117,6 @@ class Checker:
         n, total = sum(self.results), len(self.results)
         ok = n == total
         print("\n" + "═" * 62)
-        print(f" 结果: {n}/{total} " + ("✅ 全部接口配对一致" if ok else "❌ 有失配!"))
+        print(f" Result: {n}/{total} " + ("✅ All interfaces match" if ok else "❌ Mismatch detected!"))
         print("═" * 62)
         return ok

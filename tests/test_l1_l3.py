@@ -365,3 +365,50 @@ class TestL3ErrorHandling:
         o = Obj()
         assert get_com_member(o, "x") == 42
         assert get_com_member(o, "y") == 99
+
+
+class TestL3ErrorMessages:
+    """L3: Error message regression — English-only, parameters preserved."""
+
+    def test_face_selection_error_has_coords(self):
+        """Raise message must contain label and coordinates."""
+        from solidworks_2026_skill.sw_session import SW
+        import inspect
+        src = inspect.getsource(SW.face)
+        # Verify English error message with params
+        assert "Face selection failed" in src, "face() error not English"
+        assert "{label}" in src, "face() missing label param"
+        assert "{x}" in src, "face() missing x param"
+
+    def test_check_faces_error_has_counts(self):
+        """Raise message must contain face count delta."""
+        from solidworks_2026_skill.sw_session import SW
+        import inspect
+        src = inspect.getsource(SW.check_faces)
+        assert "{prev}" in src and "{n}" in src, "check_faces() missing count params"
+
+    def test_cut_error_has_depth(self):
+        """Raise message must contain depth param."""
+        from solidworks_2026_skill.sw_session import SW
+        import inspect
+        src = inspect.getsource(SW.cut)
+        assert "{depth}" in src or "depth" in src.lower(), "cut() missing depth"
+
+    def test_plane_error_is_english(self):
+        """Plane selection error must be English."""
+        from solidworks_2026_skill.sw_session import SW
+        import inspect
+        src = inspect.getsource(SW.plane)
+        assert "Plane selection failed" in src or "选基准面失败" not in src
+
+    def test_no_chinese_in_session_errors(self):
+        """sw_session.py RuntimeError messages must have no Chinese."""
+        import re
+        with open("solidworks_2026_skill/sw_session.py", encoding="utf-8") as f:
+            src = f.read()
+        # Find all RuntimeError raises
+        for m in re.finditer(r'raise RuntimeError\((.+)\)', src):
+            msg = m.group(1)
+            if re.search(r'[一-鿿]', msg):
+                raise AssertionError(f"Chinese in RuntimeError: {msg[:80]}")
+

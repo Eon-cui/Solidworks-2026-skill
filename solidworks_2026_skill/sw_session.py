@@ -5,9 +5,9 @@ sw_session.py — SW2026 会话管理 (with 模式 + 清场 + 面数追踪 + COM
 铁律内置:
   1. FeatureCut3 26参数 Flip=F/Dir=F/NormalCut=F, None 必 raise
   2. 开工 CloseAllDocuments, 收工 QuitDoc
-  3. 每特征面数追踪
+  3. 每features面数追踪
   4. GetActiveObject 优先 (Dispatch 每次开新 SW 实例)
-注意: SW 类的草图/特征接口用 **毫米** (内部转米); 底层 sw_part.py 用米。
+注意: SW 类的草图/features接口用 **毫米** (内部转米); 底层 sw_part.py 用米。
 """
 import sys
 # stdout configured by solidworks_2026_skill._compat
@@ -53,17 +53,17 @@ class SW:
         tpl = _find_tpl(self.sw, "part")
         self.model = self.sw.NewDocument(tpl, 0, 0, 0) or _v(self.sw.ActiveDoc)
         if self.model is None:
-            raise RuntimeError("NewDocument 失败 (模板路径/幽灵模板?)")
+            raise RuntimeError("NewDocument failed (bad template path?)")
         self.ext = self.model.Extension
         self.skm = self.model.SketchManager
         self.fm = self.model.FeatureManager
-        print(f"[{self.part_name}] SW 会话开始, 已清场")
+        print(f"[{self.part_name}] SW session started, cleaned")
         return self
 
     def __exit__(self, exc_type, exc, tb):
         try:
             self.sw.QuitDoc(_v(self.model.GetTitle))   # 铁律: 关窗口
-            print(f"[{self.part_name}] 窗口已关")
+            print(f"[{self.part_name}] window closed")
         except Exception:
             pass
         finally:
@@ -83,7 +83,7 @@ class SW:
         prev = self.faces_log[-1][1] if self.faces_log else 0
         self.faces_log.append((label, n))
         if n < prev + min_delta:
-            raise RuntimeError(f"{label}: 面数 {prev}→{n}, 特征可能未生效!")
+            raise RuntimeError(f"{label}: faces {prev}→{n}, delta={n-prev} — feature may be ineffective!")
         print(f"   ✓ {label} faces={n}")
 
     # ── 选择 ──
@@ -92,7 +92,7 @@ class SW:
         for nm in names:
             if self.ext.SelectByID2(nm, "PLANE", 0, 0, 0, False, 0, VN(), 0):
                 return
-        raise RuntimeError(f"选基准面失败: {names}")
+        raise RuntimeError(f"Plane selection failed: {names}")
 
     def face(self, x, y, z, label=""):
         """坐标选面 (mm)。内置 13 点重试: 中心→4向偏置→8向偏置。
@@ -106,7 +106,7 @@ class SW:
             xx, yy, zz = M(x + dx), M(y + dy), M(z + dz)
             if self.ext.SelectByID2("", "FACE", xx, yy, zz, False, 0, VN(), 0):
                 if dx != 0 or dy != 0 or dz != 0:
-                    print(f"     (face: offset ({dx},{dy},{dz})mm 命中)")
+                    print(f"     (face: offset ({dx},{dy},{dz})mm hit)")
                 return
         raise RuntimeError(f"Face selection failed: {label} at ({x},{y},{z})mm")
 
@@ -156,7 +156,7 @@ class SW:
     def exit_sketch(self):
         self.model.InsertSketch2(True)
 
-    # ── 特征 (参数来自 _com_signatures 单一事实来源) ──
+    # ── features (参数来自 _com_signatures 单一事实来源) ──
     def extrude(self, depth, reverse=False):
         """FeatureExtrusion3。参数委托 _com_signatures.feature_extrusion3_params。
         NOTE: 不委托 sw_part.extrude_boss — 后者需要 sketch_name 且 direction≠reverse 语义。"""
@@ -182,9 +182,9 @@ class SW:
                 if flip or direction:
                     print(f"     (cut: flip={flip} dir={direction})")
                 if flip:
-                    print("     ⚠ Flip=True 生效 — 务必 verify_step 验证几何!")
+                    print("     ⚠ Flip=True activated — verify geometry with verify_step!")
                 return f
-        raise RuntimeError(f"FeatureCut3 四路均 None (d={depth},thru={through_all})")
+        raise RuntimeError(f"FeatureCut3 failed all 4 directions (d={depth}, thru={through_all})")
 
     def fillet_edges(self, edges_mm, r):
         """边圆角。edges: [(x,y,z)mm 边中点]"""
@@ -194,7 +194,7 @@ class SW:
             if self.ext.SelectByID2("", "EDGE", M(x), M(y), M(z), True, 1, VN(), 0):
                 n += 1
         if n == 0:
-            raise RuntimeError("圆角: 0 边选中")
+            raise RuntimeError("Fillet: 0 edges selected")
         f = self.fm.FeatureFillet(195, M(r), 0, 0, None, None, None)
         if f is None:
             raise RuntimeError("FeatureFillet None")
@@ -212,8 +212,8 @@ class SW:
         ok1 = self.ext.SaveAs(sld, 0, 1, VN(), VBR(), VBR())
         ok2 = self.ext.SaveAs(stp, 0, 1, VN(), VBR(), VBR())  # SaveAs4 STEP 是 4KB 空壳, 禁用
         if not (ok1 and ok2):
-            raise RuntimeError(f"保存失败 sld={ok1} stp={ok2}")
-        print(f"   ✓ 已保存 {name}.SLDPRT + .STEP")
+            raise RuntimeError(f"Save failed: sldprt={ok1} step={ok2}")
+        print(f"   ✓ Saved {name}.SLDPRT + .STEP")
         return sld, stp
 
     def snapshot(self, out_dir: str, name: str) -> list[str]:

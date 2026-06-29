@@ -143,7 +143,7 @@ def batch_export(sw, file_paths, output_dir, format_ext=".step"):
             results.append({
                 "file": file_path,
                 "success": False,
-                "error": f"无法打开，错误码: {errors.value}, 警告码: {warnings.value}",
+                "error": f"无法打开，错误码: {errors.value}, warn: {warnings.value}",
             })
             continue
 
@@ -163,7 +163,7 @@ def batch_export(sw, file_paths, output_dir, format_ext=".step"):
 
     # 汇总
     success_count = sum(1 for r in results if r["success"])
-    print(f"批量导出完成: {success_count}/{len(results)} 成功")
+    print(f"Batch export complete: {success_count}/{len(results)} succeeded")
     return results
 
 
@@ -187,6 +187,6 @@ def _export_generic(model, output_path):
 def _print_result(format_name, path, success, errors, warnings):
     """打印导出结果"""
     if success:
-        print(f"{format_name} 导出成功: {path}")
+        print(f"{format_name} Export succeeded: {path}")
     else:
-        print(f"{format_name} 导出失败, 错误码: {errors.value}, 警告码: {warnings.value}")
+        print(f"{format_name} Export failed, 错误码: {errors.value}, warn: {warnings.value}")

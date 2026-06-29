@@ -80,7 +80,7 @@ def search_standard_part(query: str, category: str | None = None,
 def download_and_import(sw, part: dict, out_dir: str) -> str | None:
     """
     下载 STEP → SHA-256 校验 → 导入 SW → 存 SLDPRT → 返回路径。
-    失败返回 None。
+    failed返回 None。
 
     part: search_standard_part 返回的单个 item dict (需含 id + stepUrl + sha256)
     sw: SW 连接对象 (ISldWorks)
@@ -188,7 +188,7 @@ def create_placeholder_and_record_miss(sw, name: str, out_dir: str,
             s.check_faces(f"{name} 占位(默认)")
 
     sldprt = os.path.join(out_dir, f"{name}.SLDPRT")
-    print(f"  ⚠ {name}: step.parts 不可达 → 占位 {sldprt}")
+    print(f"  ⚠ {name}: step.parts unreachable → placeholder {sldprt}")
     return sldprt
 
 

@@ -34,9 +34,9 @@ DOC_TYPE_MAP = {
 }
 
 DOC_TYPE_LABELS = {
-    "part": "零件",
-    "assembly": "装配体",
-    "drawing": "工程图",
+    "part": "Part",
+    "assembly": "Assembly",
+    "drawing": "Drawing",
 }
 
 
@@ -54,7 +54,7 @@ def normalize_doc_type(doc_type):
     key = str(doc_type).strip().lower().lstrip(".")
     enum_value = DOC_TYPE_MAP.get(key)
     if enum_value is None:
-        raise ValueError(f"未知文档类型: {doc_type}")
+        raise ValueError(f"Unknown document type: {doc_type}")
 
     name_map = {1: "part", 2: "assembly", 3: "drawing"}
     return name_map[enum_value], enum_value
@@ -90,7 +90,7 @@ def connect_solidworks(version=None, wait_seconds=5, visible=True):
     # 优先连接已运行的实例。
     try:
         sw = win32com_client.GetActiveObject("SldWorks.Application")
-        print("已连接到运行中的 SolidWorks 实例")
+        print("Connected to running SolidWorks instance")
     except Exception:
         prog_id = "SldWorks.Application"
         if version:
@@ -99,17 +99,17 @@ def connect_solidworks(version=None, wait_seconds=5, visible=True):
 
         sw = win32com_client.Dispatch(prog_id)
         sw.Visible = visible
-        print(f"启动了新的 SolidWorks 实例（ProgID: {prog_id}）")
+        print(f"Started new SolidWorks instance (ProgID: {prog_id})")
         time.sleep(wait_seconds)
 
     model = sw.ActiveDoc
     if model:
-        doc_types = {1: "零件", 2: "装配体", 3: "工程图"}
+        doc_types = {1: "Part", 2: "Assembly", 3: "Drawing"}
         doc_type = get_com_member(model, "GetType")
         title = get_com_member(model, "GetTitle")
-        print(f"当前文档: {title} (类型: {doc_types.get(doc_type, '未知')})")
+        print(f"Current document: {title} (type: {doc_types.get(doc_type, 'unknown')})")
     else:
-        print("当前没有打开的文档")
+        print("No open documents")
 
     return sw, model
 
@@ -172,9 +172,9 @@ def find_template(sw, doc_type="part"):
             return matches[0]
 
     raise FileNotFoundError(
-        f"无法找到 {doc_type} 模板文件。\n"
-        f"  尝试设置环境变量: SW_INSTALL_DIR=SW安装目录, SW_TEMPLATES_DIR=模板目录\n"
-        f"  或手动指定 template_path 参数。"
+        f"No {doc_type} template found。\n"
+        f"  Try setting SW_INSTALL_DIR and SW_TEMPLATES_DIR environment variables\n"
+        f"  or specify template_path manually。"
     )
 
 
@@ -205,9 +205,9 @@ def new_document(sw, doc_type="part", template_path=None):
             time.sleep(0.25)
 
     if model is None:
-        raise RuntimeError(f"创建{DOC_TYPE_LABELS.get(doc_type, doc_type)}文档失败，SolidWorks 未返回活动文档")
+        raise RuntimeError(f"Failed to create {DOC_TYPE_LABELS.get(doc_type, doc_type)} document, SW returned no active document")
 
-    print(f"已创建新{DOC_TYPE_LABELS.get(doc_type, doc_type)}文档")
+    print(f"Created new {DOC_TYPE_LABELS.get(doc_type, doc_type)} document")
     return model
 
 
@@ -220,7 +220,7 @@ def open_document(sw, file_path, read_only=False, silent=False, raise_on_error=F
         file_path: 文件完整路径
         read_only: 是否以只读模式打开
         silent: 是否静默打开
-        raise_on_error: 打开失败时是否抛出异常
+        raise_on_error: Open failed时是否抛出异常
 
     返回:
         IModelDoc2 对象
@@ -245,9 +245,9 @@ def open_document(sw, file_path, read_only=False, silent=False, raise_on_error=F
 
     model = sw.OpenDoc6(file_path, doc_type, options, "", errors, warnings)
     if model:
-        print(f"已打开: {file_path}")
+        print(f"Opened: {file_path}")
     else:
-        message = f"打开失败, 错误码: {errors.value}, 警告码: {warnings.value}"
+        message = f"Open failed, 错误码: {errors.value}, warn: {warnings.value}"
         if raise_on_error:
             raise RuntimeError(message)
         print(message)
@@ -278,8 +278,8 @@ def save_document(model, file_path=None):
         success = model.Save3(1, errors, warnings)
 
     if success:
-        print(f"保存成功: {file_path or get_com_member(model, 'GetPathName')}")
+        print(f"Saved: {file_path or get_com_member(model, 'GetPathName')}")
     else:
-        print(f"保存失败, 错误码: {errors.value}, 警告码: {warnings.value}")
+        print(f"Save failed, error code: {errors.value}, warning code: {warnings.value}")
     return bool(success)
 

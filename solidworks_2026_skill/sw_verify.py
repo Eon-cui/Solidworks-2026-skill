@@ -1,10 +1,10 @@
 """
 sw_verify.py — STEP 几何验收 + 面数验证 + 装配位姿验证 + 7D3S 自动评分
 =====================================================================
-铁律 3: 控制台 OK ≠ 特征生效。验收强度匹配交付物维度:
+铁律 3: 控制台 OK ≠ features生效。验收强度匹配交付物维度:
   零件   → verify_step (圆柱面半径分布 + 外径/包围盒)
   装配体 → verify_assembly_poses (ITEM_DEFINED_TRANSFORMATION 第一 placement)
-  特征   → count_faces (建模过程中用 sw_session.SW.check_faces)
+  features   → count_faces (建模过程中用 sw_session.SW.check_faces)
 
 换算: 1 孔 = 2 半圆柱面 (内部已 //2); 1 圆角 = 1 圆柱面。
 """
@@ -22,8 +22,8 @@ from collections import Counter
 def verify_step(step_path, expected_holes, bbox=None, max_circle=None, tol=0.6):
     """
     expected_holes: [(radius_mm, count, name), ...]   1 孔 = 2 半圆柱面 (已换算)
-    bbox: (dx,dy,dz) 期望包围盒 — ⚠ 圆盘类零件圆周无显式点, 勿用
-    max_circle: 期望最大圆半径 mm (盘类外径验证, 替代 bbox)
+    bbox: (dx,dy,dz) expected包围盒 — ⚠ 圆盘类零件圆周无显式点, 勿用
+    max_circle: expected最大圆半径 mm (盘类外径验证, 替代 bbox)
     返回 (ok, report)
     """
     with open(step_path, encoding="utf-8", errors="ignore") as f:
@@ -44,7 +44,7 @@ def verify_step(step_path, expected_holes, bbox=None, max_circle=None, tol=0.6):
         rmax = max((float(c) for c in circles), default=0)
         good = abs(rmax - max_circle) < tol
         ok = ok and good
-        lines.append(f"  最大圆 R{rmax:.1f} (期望{max_circle}) {'✅' if good else '❌'}")
+        lines.append(f"  最大圆 R{rmax:.1f} (expected{max_circle}) {'✅' if good else '❌'}")
 
     if bbox:
         pts = re.findall(
@@ -61,7 +61,7 @@ def verify_step(step_path, expected_holes, bbox=None, max_circle=None, tol=0.6):
         good = all(abs(g - w) < tol for g, w in zip(sorted(got_box), sorted(bbox)))
         ok = ok and good
         lines.append(f"  BBox: {got_box[0]:.1f}×{got_box[1]:.1f}×{got_box[2]:.1f} "
-                     f"(期望{bbox[0]}×{bbox[1]}×{bbox[2]}) {'✅' if good else '❌'}")
+                     f"(expected{bbox[0]}×{bbox[1]}×{bbox[2]}) {'✅' if good else '❌'}")
 
     report = "\n".join(lines) + f"\n  ═══ {'✅ PASS' if ok else '❌ FAIL'} ═══"
     return ok, report
@@ -141,7 +141,7 @@ def verify_assembly_poses(step_path, expected, tol_mm=0.1, tol_axis=0.01):
                     break
         n_match += found
         if not found:
-            lines.append(f"  ❌ {label}: 期望 t={t} z={zrow} 未匹配")
+            lines.append(f"  ❌ {label}: expected t={t} z={zrow} 未匹配")
     lines.append(f"  位姿匹配: {n_match}/{len(expected)} "
                  + ("✅ PASS" if n_match == len(expected) else "❌ FAIL"))
     return n_match, len(expected), "\n".join(lines)
@@ -225,16 +225,16 @@ def md5_of(path):
 
 def run_validation_pipeline(sldprt_path, step_path, expected_spec):
     """
-    6 阶段验证流水线。Stage N 失败 → 停止，返回结果。
+    6 阶段验证流水线。Stage N failed → 停止，返回结果。
 
     expected_spec: {
-        'faces': {'底盘': 1, '中心孔': 1, ...},           # Stage 0: check_faces 期望
-        'holes': [(r_mm, count, name), ...],            # Stage 1: verify_step 期望
+        'faces': {'底盘': 1, '中心孔': 1, ...},           # Stage 0: check_faces expected
+        'holes': [(r_mm, count, name), ...],            # Stage 1: verify_step expected
         'max_circle': float | None,                     # Stage 1: 盘类外径
         'poses': [(label, R_rows, t_mm), ...] | None,   # Stage 2: 装配位姿 (None=跳过)
         'interfaces': None,                              # Stage 3: 手动跑 sw_check_interfaces
         'snapshot': bool,                                # Stage 4: SaveBMP + Pillow
-        'dims_7d3s': dict | None,                        # Stage 5: 7D3S 期望参数 (None=跳过)
+        'dims_7d3s': dict | None,                        # Stage 5: 7D3S expected参数 (None=跳过)
     }
 
     返回: {'stage': str, 'passed': bool, 'report': str}

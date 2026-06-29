@@ -251,9 +251,9 @@ def main() -> int:
         allow_install=allow_install,
         check_solidworks=not args.no_solidworks_check,
     )
-    print("SolidWorks 自动化技能自检通过。")
+    print("SolidWorks automation preflight passed.")
     if result.missing_packages:
-        print("已补齐依赖: " + ", ".join(result.missing_packages))
+        print("Dependencies installed: " + ", ".join(result.missing_packages))
     return 0
 
 

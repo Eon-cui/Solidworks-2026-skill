@@ -2,7 +2,7 @@
 sw_mate.py — 程序化面选择 mate 自动化 (SW2026 装配实战验证)
 ============================================================
 铁律 7: SelectByID2 坐标拾取 = 视线射线 (鼠标语义), 装配体内必选错 →
-正路: GetBodies3(tuple!) → GetFaces → ISurface 参数匹配 → IEntity.Select4
+Regular 路: GetBodies3(tuple!) → GetFaces → ISurface 参数匹配 → IEntity.Select4
 
 来源: UR-SEU-2026 add_mates.py (43 配合全部成功, 复验位姿零漂移)。
 
@@ -122,7 +122,7 @@ def _select_pair(asm_model, face_a, face_b):
     s1 = MOD.IEntity(face_a._oleobj_).Select4(False, None)
     s2 = MOD.IEntity(face_b._oleobj_).Select4(True, None)
     if not (s1 and s2):
-        raise RuntimeError(f"Select4 失败 {s1}/{s2}")
+        raise RuntimeError(f"Select4 failed {s1}/{s2}")
 
 
 def _add_mate(asm_model, mate_type, dist_m=0.0, gear_n=0.0, gear_d=0.0):
@@ -154,7 +154,7 @@ def add_coincident(asm_model, face_a, face_b):
 
 
 def add_distance(asm_model, face_a, face_b, dist_mm):
-    """距离配合 (设计间隙)。align=closest → 初始位姿正确则零移动。"""
+    """距离配合 (设计间隙)。align=closest → 初始位姿Regular 确则零移动。"""
     _select_pair(asm_model, face_a, face_b)
     return _add_mate(asm_model, SW_MATE_DISTANCE, dist_m=dist_mm / 1000.0)
 
@@ -171,13 +171,13 @@ def add_lock_group(asm_model, comps, names):
     anchor = comps.get(names[0])
     fa = any_face(anchor) if anchor else None
     if fa is None:
-        raise RuntimeError(f"LOCK 锚缺失: {names[0]}")
+        raise RuntimeError(f"LOCK anchor missing: {names[0]}")
     n = 0
     for name in names[1:]:
         ce = comps.get(name)
         fb = any_face(ce) if ce else None
         if fb is None:
-            print(f"  ✗ LOCK 成员缺失: {name}")
+            print(f"  ✗ LOCK member missing: {name}")
             continue
         _select_pair(asm_model, fa, fb)
         try:
@@ -219,5 +219,5 @@ def rebuild_and_save(asm_model, asm_path, also_step=True):
         step = asm_path.rsplit(".", 1)[0] + ".STEP"
         ok2 = _save_as(asm_model, step)
     if not (ok1 and ok2):
-        raise RuntimeError(f"保存失败 asm={ok1} step={ok2}")
+        raise RuntimeError(f"Save failed: asm={ok1} step={ok2}")
     return True

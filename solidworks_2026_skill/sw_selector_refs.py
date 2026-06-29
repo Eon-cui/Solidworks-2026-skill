@@ -2,7 +2,7 @@
 sw_selector_refs.py — STEP 圆柱面选择器发现
 =============================================
 复用 sw_verify._parse_step_entities + _placement，
-从 STEP 中自动发现圆柱面并按几何特征分配 #h1/#b1 标签。
+从 STEP 中自动发现圆柱面并按几何features分配 #h1/#b1 标签。
 
 只做圆柱面 (CYLINDRICAL_SURFACE)，不做平面 (PLANE 无边界信息)。
 """
