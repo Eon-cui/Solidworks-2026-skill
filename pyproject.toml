@@ -12,5 +12,8 @@ dependencies = ["pywin32>=305"]
 [project.optional-dependencies]
 mcp = ["mcp>=1.0"]
 
+[project.scripts]
+sw-mcp = "mcp.server:main"
+
 [tool.setuptools.packages.find]
 include = ["sw_2026_skill*"]

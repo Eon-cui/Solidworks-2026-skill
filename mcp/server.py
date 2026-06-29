@@ -1789,5 +1789,10 @@ async def run_server():
     await mcp.run_stdio_async()
 
 
-if __name__ == "__main__":
+def main():
+    """CLI entry point for sw-mcp"""
     asyncio.run(run_server())
+
+
+if __name__ == "__main__":
+    main()

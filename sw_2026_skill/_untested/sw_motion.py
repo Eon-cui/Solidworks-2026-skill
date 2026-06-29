@@ -11,14 +11,9 @@ import sys
 import glob
 import os
 
-try:
-    from .sw_preflight import import_com_dependencies
-    from .sw_connect import safe_get_com_member
-    from .sw_assembly import find_largest_cylinder_face
-except ImportError:
-    from sw_preflight import import_com_dependencies
-    from sw_connect import safe_get_com_member
-    from sw_assembly import find_largest_cylinder_face
+from sw_2026_skill.sw_preflight import import_com_dependencies
+from sw_2026_skill.sw_connect import safe_get_com_member
+from sw_2026_skill.sw_assembly import find_largest_cylinder_face
 
 pythoncom, win32com_client, VARIANT = import_com_dependencies()
 
