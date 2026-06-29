@@ -10,7 +10,7 @@ from solidworks_2026_skill.sw_verify import verify_step
 
 with SW("Bracket") as s:               # 清场 → 新建零件 → (退出时关窗)
     # 1. 主体
-    s.sketch_on_plane()                # 默认上视基准面 (中英文名自动兼容)
+    s.sketch_on_plane()                # default Top Plane (English-first, Chinese fallback)
     s.circle(0, 0, 44)                 # (cx, cy, 直径) 毫米
     s.exit_sketch()
     s.extrude(6)

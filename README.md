@@ -38,7 +38,7 @@ with SW("MyPart") as s:
     s.exit_sketch()
     s.extrude(6)
     s.check_faces("base")
-    s.sketch_on_plane(("Front Plane",))
+    s.sketch_on_plane(("Front Plane", "前视基准面"))
     s.circle(0, 0, 10)
     s.exit_sketch()
     s.cut(through_all=True)

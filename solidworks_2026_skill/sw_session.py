@@ -108,7 +108,8 @@ class SW:
         raise RuntimeError(f"Face selection failed: {label} at ({x},{y},{z})mm")
 
     # ── 草图 (毫米) ──
-    def sketch_on_plane(self, names=("上视基准面", "Top Plane")):
+    def sketch_on_plane(self, names=("Top Plane", "Front Plane", "Right Plane",
+                                    "上视基准面", "前视基准面", "右视基准面")):
         self.plane(names)
         self.model.InsertSketch2(True)
         self.model.ClearSelection2(True)

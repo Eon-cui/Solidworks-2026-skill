@@ -612,8 +612,8 @@ async def sw_force_rebuild() -> str:
 # ═══════════════════════════════════════════════════════════════════
 
 @mcp.tool()
-async def sw_sketch_create(plane: str = "前视基准面") -> str:
-    """在基准面上新建草图。plane: 前视/上视/右视基准面 (中英文兼容)。"""
+async def sw_sketch_create(plane: str = "Front Plane") -> str:
+    """Create sketch on a plane. plane: Front/Top/Right Plane (Chinese names also accepted)."""
     model_ext = _model_ext()
     matched = _select_plane(model_ext, plane)
     if not matched:
@@ -1031,8 +1031,8 @@ async def sw_get_selected_names() -> str:
 # ═══════════════════════════════════════════════════════════════════
 
 @mcp.tool()
-async def sw_create_plane_offset(offset: float = 0.01, reference: str = "前视基准面") -> str:
-    """偏移基准面。"""
+async def sw_create_plane_offset(offset: float = 0.01, reference: str = "Front Plane") -> str:
+    """Offset reference plane."""
     model_ext = _model_ext()
     matched = _select_plane(model_ext, reference)
     if matched:
@@ -1491,7 +1491,7 @@ async def sw_gear_create(joint: str = "J1", which: str = "both", segments: int =
             results.append(f"{joint} {label} 创建Created new 失败")
             continue
 
-        doc.Extension.SelectByID2("前视基准面", "PLANE", _vr8(0), _vr8(0), _vr8(0), _vb(False), _vi4(0), _vn(), _vi4(0))
+        doc.Extension.SelectByID2("Front Plane", "PLANE", _vr8(0), _vr8(0), _vr8(0), _vb(False), _vi4(0), _vn(), _vi4(0))
         sm = doc.SketchManager
         doc.InsertSketch2(True)
 
