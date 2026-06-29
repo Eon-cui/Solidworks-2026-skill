@@ -1,5 +1,5 @@
 """
-test_syntax.py — compile all sw_2026_skill Python files.
+test_syntax.py — compile all solidworks_2026_skill Python files.
 Does NOT import them (avoids pywin32/SW dependency).
 """
 import sys
@@ -7,7 +7,7 @@ import py_compile
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
-PKG = ROOT / "sw_2026_skill"
+PKG = ROOT / "solidworks_2026_skill"
 
 EXCLUDE = {"_untested", "__pycache__", "tests"}
 

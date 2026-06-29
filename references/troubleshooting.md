@@ -75,7 +75,7 @@
 | print 中文崩 UnicodeEncodeError | Windows GBK 终端 | 每个 .py 前两行 `sys.stdout.reconfigure(encoding='utf-8', errors='replace')` |
 | 中文路径经 shell 传入变乱码 | shell stdin 走 console code page | Python 内 `os.listdir()` 匹配前缀，不从 shell 传中文 |
 | bash heredoc 修补文件 `\n` 匹配失败 | heredoc 吃 `\\n` 转义 | 含反斜杠的字符串用 `chr(92)` 构造，或用编辑器工具 |
-| 缺 pywin32/comtypes | 环境未装 | `python -m sw_2026_skill.sw_preflight --yes` |
+| 缺 pywin32/comtypes | 环境未装 | `python -m solidworks_2026_skill.sw_preflight --yes` |
 | 检测不到 SW | 未安装/未注册 COM | 安装后启动一次 SW 完成注册 |
 
 ## H. 系统化修复协议

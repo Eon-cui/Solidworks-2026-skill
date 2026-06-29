@@ -3,7 +3,7 @@ SolidWorks 连接工具
 提供连接到 SolidWorks 实例的各种方法
 """
 import sys
-# stdout configured by sw_2026_skill._compat
+# stdout configured by solidworks_2026_skill._compat
 import glob
 import os
 import time

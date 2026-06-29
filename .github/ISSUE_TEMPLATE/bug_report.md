@@ -21,4 +21,4 @@ labels: bug
 - OS: Windows
 - SW Version:
 - Python Version:
-- sw-2026-skill Version:
+- solidworks-2026-skill Version:

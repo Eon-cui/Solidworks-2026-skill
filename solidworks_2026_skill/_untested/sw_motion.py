@@ -5,15 +5,15 @@ SolidWorks Motion Study 自动化工具。
 创建匀速旋转马达并触发计算。SolidWorks API 使用米作为长度单位；转速参数使用 RPM。
 """
 import sys
-# stdout configured by sw_2026_skill._compat
+# stdout configured by solidworks_2026_skill._compat
 """[来自上游 solidworks-automation-skill, 未经 UR-SEU-2026 实测 — 使用前按 references/com-patterns.md 模式 4 验证关键签名]"""
 
 import glob
 import os
 
-from sw_2026_skill.sw_preflight import import_com_dependencies
-from sw_2026_skill.sw_connect import safe_get_com_member
-from sw_2026_skill.sw_assembly import find_largest_cylinder_face
+from solidworks_2026_skill.sw_preflight import import_com_dependencies
+from solidworks_2026_skill.sw_connect import safe_get_com_member
+from solidworks_2026_skill.sw_assembly import find_largest_cylinder_face
 
 pythoncom, win32com_client, VARIANT = import_com_dependencies()
 
@@ -31,7 +31,7 @@ def _motion_typelib_candidates():
     ]
     # Try sw_preflight path resolver first
     try:
-        from sw_2026_skill.sw_preflight import get_sw_tlb_path
+        from solidworks_2026_skill.sw_preflight import get_sw_tlb_path
         path = get_sw_tlb_path("swmotionstudy.tlb")
         if path:
             yield path

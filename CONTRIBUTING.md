@@ -3,7 +3,7 @@
 ## Development Setup
 
 ```bash
-cd sw-2026-skill
+cd solidworks-2026-skill
 pip install -e ".[mcp]"
 ```
 
@@ -34,7 +34,7 @@ Before writing any SW COM code:
 ## PR Checklist
 
 - [ ] Syntax: all `.py` files parse
-- [ ] Import: `from sw_2026_skill import SW` works
+- [ ] Import: `from solidworks_2026_skill import SW` works
 - [ ] No new `except: pass` without `traceback.print_exc()`
 - [ ] No `time.sleep()` in `async def`
 - [ ] All file writes go through `_validate_output_path()`

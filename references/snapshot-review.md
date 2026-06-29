@@ -13,7 +13,7 @@
 ## SW 实现
 
 ```python
-from sw_2026_skill.sw_snapshot import capture_views
+from solidworks_2026_skill.sw_snapshot import capture_views
 
 # model = SW 的 IModelDoc2
 pngs = capture_views(model, r"D:\out", "Bracket")

@@ -10,7 +10,7 @@ sw_session.py — SW2026 会话管理 (with 模式 + 清场 + 面数追踪 + COM
 注意: SW 类的草图/特征接口用 **毫米** (内部转米); 底层 sw_part.py 用米。
 """
 import sys
-# stdout configured by sw_2026_skill._compat
+# stdout configured by solidworks_2026_skill._compat
 import os
 import glob
 import math
@@ -264,5 +264,5 @@ class SW:
 
     def snapshot(self, out_dir: str, name: str) -> list[str]:
         """强制视觉复核 — 标准 4 视图 PNG。依赖 Pillow。"""
-        from sw_2026_skill.sw_snapshot import capture_views
+        from solidworks_2026_skill.sw_snapshot import capture_views
         return capture_views(self.model, out_dir, name)

@@ -1,5 +1,5 @@
 """
-test_independence.py — verify sw-2026-skill has zero references to text-to-cad internals.
+test_independence.py — verify solidworks-2026-skill has zero references to text-to-cad internals.
 Pure Python, no dependencies.
 """
 import subprocess
@@ -17,8 +17,8 @@ FORBIDDEN = [
 
 def test_no_text_to_cad_references():
     """grep: zero mentions of text-to-cad internal APIs/libraries."""
-    # Only check references/ and sw_2026_skill/ (not _untested/, not tests/)
-    dirs = [str(ROOT / d) for d in ("references", "sw_2026_skill")]
+    # Only check references/ and solidworks_2026_skill/ (not _untested/, not tests/)
+    dirs = [str(ROOT / d) for d in ("references", "solidworks_2026_skill")]
     excludes = ["_untested", "__pycache__", "tests"]
 
     found = []

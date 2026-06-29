@@ -1,4 +1,4 @@
-# sw-2026-skill
+# solidworks-2026-skill
 
 > SolidWorks 2026 Python COM automation toolkit — part modeling, assembly, mates,
 > verification & export. Battle-tested through UR-SEU-2026 5-DOF robotic arm project.
@@ -23,14 +23,14 @@ Every function backed by STEP-level geometric verification — no "console OK" t
 
 ```bash
 # Install
-cd sw-2026-skill
+cd solidworks-2026-skill
 pip install -e .
 
 # Verify
-python -c "from sw_2026_skill import SW, __version__; print(__version__)"
+python -c "from solidworks_2026_skill import SW, __version__; print(__version__)"
 
 # Use in scripts
-from sw_2026_skill import SW, verify_step
+from solidworks_2026_skill import SW, verify_step
 
 with SW("MyPart") as s:
     s.sketch_on_plane()
@@ -62,17 +62,17 @@ assert ok
 
 | Need | Module | Docs |
 |------|--------|------|
-| Session + modeling (mm) | `sw_2026_skill.sw_session` | [SKILL.md](SKILL.md) |
-| Low-level features (m) | `sw_2026_skill.sw_part` | [part-modeling.md](references/part-modeling.md) |
-| Assembly pose insertion | `sw_2026_skill.sw_assembly` | [assembly.md](references/assembly.md) |
-| Programmatic mates | `sw_2026_skill.sw_mate` | [assembly.md](references/assembly.md) |
-| STEP verification + 7D3S | `sw_2026_skill.sw_verify` | [verification.md](references/verification.md) |
-| Cross-part interface check | `sw_2026_skill.sw_check_interfaces` | [verification.md](references/verification.md) |
-| Export (STEP/STL/PDF/DXF) | `sw_2026_skill.sw_export` | — |
-| Environment preflight | `sw_2026_skill.sw_preflight` | [troubleshooting.md](references/troubleshooting.md) |
-| VBA macro guard | `sw_2026_skill.sw_macro_guard` | — |
+| Session + modeling (mm) | `solidworks_2026_skill.sw_session` | [SKILL.md](SKILL.md) |
+| Low-level features (m) | `solidworks_2026_skill.sw_part` | [part-modeling.md](references/part-modeling.md) |
+| Assembly pose insertion | `solidworks_2026_skill.sw_assembly` | [assembly.md](references/assembly.md) |
+| Programmatic mates | `solidworks_2026_skill.sw_mate` | [assembly.md](references/assembly.md) |
+| STEP verification + 7D3S | `solidworks_2026_skill.sw_verify` | [verification.md](references/verification.md) |
+| Cross-part interface check | `solidworks_2026_skill.sw_check_interfaces` | [verification.md](references/verification.md) |
+| Export (STEP/STL/PDF/DXF) | `solidworks_2026_skill.sw_export` | — |
+| Environment preflight | `solidworks_2026_skill.sw_preflight` | [troubleshooting.md](references/troubleshooting.md) |
+| VBA macro guard | `solidworks_2026_skill.sw_macro_guard` | — |
 | MCP server (121 tools) | `mcp/server.py` | [SKILL.md](SKILL.md) |
-| ⚠ Drawing / Motion / Appearance / Review | `sw_2026_skill._untested/` | [upstream/](references/upstream/) |
+| ⚠ Drawing / Motion / Appearance / Review | `solidworks_2026_skill._untested/` | [upstream/](references/upstream/) |
 
 ⚠ = from upstream, untested with UR-SEU-2026. Use at own risk.
 
@@ -87,7 +87,7 @@ See [SKILL.md](SKILL.md) for full list. Key ones:
 ## Upstream Attribution
 
 Forked from [wzyn20051216/solidworks-automation-skill](https://github.com/wzyn20051216/solidworks-automation-skill) (MIT).
-References in `references/upstream/` and untested modules in `sw_2026_skill/_untested/` derive from that work.
+References in `references/upstream/` and untested modules in `solidworks_2026_skill/_untested/` derive from that work.
 
 ## License
 

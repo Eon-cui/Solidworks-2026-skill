@@ -18,7 +18,7 @@
 **使用方式：**
 
 ```python
-from sw_2026_skill.sw_verify import run_validation_pipeline
+from solidworks_2026_skill.sw_verify import run_validation_pipeline
 
 result = run_validation_pipeline(sldprt_path, step_path, expected_spec)
 # → {'stage': 'S2', 'passed': False, 'report': '❌ J1C: 期望 t=(0,78,0) 未匹配'}

@@ -32,7 +32,7 @@ SW 导出 STEP → discover_refs(step_path) → part_refs.json → "Bracket#h1"
 ## 生成 refs JSON
 
 ```python
-from sw_2026_skill.sw_selector_refs import discover_refs, write_refs_json
+from solidworks_2026_skill.sw_selector_refs import discover_refs, write_refs_json
 
 refs = discover_refs("D:/out/JointHousing.STEP")
 # → {
@@ -48,8 +48,8 @@ write_refs_json(refs, "D:/out/JointHousing_refs.json")
 ## 在验证脚本中使用
 
 ```python
-from sw_2026_skill.sw_selector_refs import load_refs, format_ref
-from sw_2026_skill.sw_check_interfaces import Checker
+from solidworks_2026_skill.sw_selector_refs import load_refs, format_ref
+from solidworks_2026_skill.sw_check_interfaces import Checker
 
 refs_a = load_refs("JointHousing_refs.json")
 refs_b = load_refs("CarrierFlange_refs.json")

@@ -4,7 +4,7 @@ sw_snapshot.py — SW 快照复核 (SaveBMP + Pillow 裁剪转 PNG)
 强制视觉复核政策见 references/snapshot-review.md。
 """
 import sys
-# stdout configured by sw_2026_skill._compat
+# stdout configured by solidworks_2026_skill._compat
 import os
 import math
 from PIL import Image

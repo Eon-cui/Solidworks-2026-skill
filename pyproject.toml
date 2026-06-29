@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sw-2026-skill"
+name = "solidworks-2026-skill"
 version = "1.0.0"
 description = "SolidWorks 2026 Python COM automation — part modeling, assembly, mates, verification & export"
 requires-python = ">=3.10"
@@ -16,4 +16,4 @@ mcp = ["mcp>=1.0"]
 sw-mcp = "mcp.server:main"
 
 [tool.setuptools.packages.find]
-include = ["sw_2026_skill*"]
+include = ["solidworks_2026_skill*"]

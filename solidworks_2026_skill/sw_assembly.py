@@ -12,7 +12,7 @@ vs 开源版核心差异:
 精确 mate (多实例/同半径多孔/局部坐标过滤) → 用 sw_mate.py。
 """
 import sys
-# stdout configured by sw_2026_skill._compat
+# stdout configured by solidworks_2026_skill._compat
 import glob
 import os
 import math

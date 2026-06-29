@@ -3,7 +3,7 @@
 ## [1.0.0] — 2026-06-13
 
 ### Added
-- Python package `sw_2026_skill` (pip installable)
+- Python package `solidworks_2026_skill` (pip installable)
 - 121-tool MCP server (`mcp/server.py`)
 - MIT License
 - Tool annotations (18 read-only tools)
@@ -14,9 +14,9 @@
 - `references/allowed-apis.md` + `references/parent-imports.md`
 
 ### Changed
-- `scripts/` → `sw_2026_skill/` (Python package rename)
+- `scripts/` → `solidworks_2026_skill/` (Python package rename)
 - `time.sleep` → `await asyncio.sleep` (8 async locations)
-- `_vn`/`_byref_int` delegate to `sw_2026_skill.sw_session`
+- `_vn`/`_byref_int` delegate to `solidworks_2026_skill.sw_session`
 - 13× `except: pass` → `traceback.print_exc()`
 - SKILL.md description: process summary → trigger conditions (CSO)
 

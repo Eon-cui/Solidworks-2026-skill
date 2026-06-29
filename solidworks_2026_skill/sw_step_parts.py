@@ -7,7 +7,7 @@ sw_step_parts.py — step.parts 外购件桥接
 独立性: 不依赖 text-to-cad 的 cad skill。仅依赖 step-parts 独立 skill (可选，未装→降级)。
 """
 import sys
-# stdout configured by sw_2026_skill._compat
+# stdout configured by solidworks_2026_skill._compat
 import os
 import json
 import hashlib
@@ -23,8 +23,8 @@ def is_step_parts_installed() -> Path | None:
     ]
     # Also check project-local (same repo pattern)
     try:
-        import sw_2026_skill
-        pkg_dir = Path(__file__).parent.parent  # sw-2026-skill/
+        import solidworks_2026_skill
+        pkg_dir = Path(__file__).parent.parent  # solidworks-2026-skill/
         candidates.append(pkg_dir.parent / "step-parts" / "scripts" / "download_step_part.py")
     except Exception:
         pass
@@ -122,7 +122,7 @@ def download_and_import(sw, part: dict, out_dir: str) -> str | None:
 
     # Import into SW
     try:
-        from sw_2026_skill.sw_connect import VBR, VN
+        from solidworks_2026_skill.sw_connect import VBR, VN
         sw.OpenDoc6(step_path, 3, 0, "", VBR(), VBR())  # 3=swDocPART
         model = sw.ActiveDoc
         # Save as SLDPRT alongside the STEP
@@ -202,14 +202,14 @@ class _placeholder_session:
         self.model = None
 
     def __enter__(self):
-        from sw_2026_skill.sw_session import SW
+        from solidworks_2026_skill.sw_session import SW
         self._sw_session = SW(self.name)
         s = self._sw_session.__enter__()
         self.model = s.model
         return s
 
     def __exit__(self, *args):
-        from sw_2026_skill.sw_session import SW
+        from solidworks_2026_skill.sw_session import SW
         # Save
         sldprt = os.path.join(self.out_dir, f"{self.name}.SLDPRT")
         step = os.path.join(self.out_dir, f"{self.name}.STEP")

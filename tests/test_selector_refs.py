@@ -16,7 +16,7 @@ def test_discover_refs():
     if not STEP_FIXTURES:
         pytest.skip("No STEP fixtures found")
 
-    from sw_2026_skill.sw_selector_refs import (
+    from solidworks_2026_skill.sw_selector_refs import (
         discover_refs, write_refs_json, load_refs, format_ref,
     )
 

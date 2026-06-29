@@ -54,4 +54,4 @@
 
 | File | Topic |
 |------|-------|
-| [parent-imports.md](parent-imports.md) | scripts/ → sw_2026_skill/ impact analysis |
+| [parent-imports.md](parent-imports.md) | scripts/ → solidworks_2026_skill/ impact analysis |

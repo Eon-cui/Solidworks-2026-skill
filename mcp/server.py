@@ -11,7 +11,7 @@ COM safety layers:
 """
 
 import sys
-# stdout configured by sw_2026_skill._compat
+# stdout configured by solidworks_2026_skill._compat
 import asyncio
 import glob as _glob
 import json as _json
@@ -24,12 +24,12 @@ from collections import Counter
 
 from mcp.server.fastmcp import FastMCP
 
-# ── sw_2026_skill package (after pip install -e .) ──────────────────
+# ── solidworks_2026_skill package (after pip install -e .) ──────────────────
 # Also works with sys.path fallback when running from source
 _src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _src_dir not in sys.path:
     sys.path.insert(0, _src_dir)
-import sw_2026_skill as _skill_pkg
+import solidworks_2026_skill as _skill_pkg
 
 # ── COM imports ──────────────────────────────────────────────────
 try:
@@ -119,9 +119,9 @@ def _vi4(v=0):
     return VARIANT(pythoncom.VT_I4, int(v))
 
 
-# _vn + _byref_int: prefer sw_2026_skill versions, fallback to local
+# _vn + _byref_int: prefer solidworks_2026_skill versions, fallback to local
 try:
-    from sw_2026_skill.sw_session import VN as _vn, VBR as _byref_int
+    from solidworks_2026_skill.sw_session import VN as _vn, VBR as _byref_int
 except ImportError:
     def _vn():
         """VARIANT(VT_DISPATCH, None) — 空 Dispatch 参数"""

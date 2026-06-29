@@ -3,7 +3,7 @@ SolidWorks 文件导出工具
 支持 STEP、STL、IGES、PDF、DXF/DWG、Parasolid 等格式
 """
 import sys
-# stdout configured by sw_2026_skill._compat
+# stdout configured by solidworks_2026_skill._compat
 import os
 
 try:

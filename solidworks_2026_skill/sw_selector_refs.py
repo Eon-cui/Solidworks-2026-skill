@@ -7,13 +7,13 @@ sw_selector_refs.py — STEP 圆柱面选择器发现
 只做圆柱面 (CYLINDRICAL_SURFACE)，不做平面 (PLANE 无边界信息)。
 """
 import sys
-# stdout configured by sw_2026_skill._compat
+# stdout configured by solidworks_2026_skill._compat
 import os
 import re
 import json
 from collections import defaultdict
 
-from sw_2026_skill.sw_verify import _parse_step_entities, _placement
+from solidworks_2026_skill.sw_verify import _parse_step_entities, _placement
 
 
 # ── 启发式阈值 ──

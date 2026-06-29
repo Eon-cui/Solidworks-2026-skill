@@ -1,2 +1,2 @@
-# sw-2026-skill requirements — 与 pyproject.toml [project].dependencies 同步
+# solidworks-2026-skill requirements — 与 pyproject.toml [project].dependencies 同步
 pywin32>=305
