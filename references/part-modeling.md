@@ -5,8 +5,8 @@
 ## 推荐路径：高层 `SW` 类（毫米接口）
 
 ```python
-from sw_session import SW
-from sw_verify import verify_step
+from solidworks_2026_skill.sw_session import SW
+from solidworks_2026_skill.sw_verify import verify_step
 
 with SW("Bracket") as s:               # 清场 → 新建零件 → (退出时关窗)
     # 1. 主体

@@ -4,7 +4,7 @@
 > verification & export. Battle-tested through UR-SEU-2026 5-DOF robotic arm project.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue)]()
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20SW%202026-lightgrey)]()
 
 ## What

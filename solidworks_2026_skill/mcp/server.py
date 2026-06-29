@@ -1689,6 +1689,10 @@ async def sw_verify_step_geometry(step_path: str, expected_holes: str = "") -> s
     if not os.path.exists(step_path):
         return f"❌ 文件不存在: {step_path}"
 
+    file_size = os.path.getsize(step_path)
+    if file_size > MAX_STEP_SIZE:
+        return f"❌ STEP 文件过大: {file_size / (1024*1024):.1f}MB (上限 {MAX_STEP_SIZE / (1024*1024):.0f}MB)"
+
     with open(step_path, encoding="utf-8", errors="ignore") as f:
         text = f.read()
 
@@ -1774,6 +1778,11 @@ async def sw_asm_verify_poses(step_path: str, expected_json: str, tol_mm: float 
     expects = _json.loads(expected_json)
     if not os.path.exists(step_path):
         return f"❌ 文件不存在: {step_path}"
+
+    file_size = os.path.getsize(step_path)
+    if file_size > MAX_STEP_SIZE:
+        return f"❌ STEP 文件过大: {file_size / (1024*1024):.1f}MB (上限 {MAX_STEP_SIZE / (1024*1024):.0f}MB)"
+
     with open(step_path, encoding="utf-8", errors="ignore") as f:
         text = f.read()
     ents = {}

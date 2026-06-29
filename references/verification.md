@@ -79,7 +79,7 @@ STEP 解析换算规则：
 参数散落在多个 build 脚本时，人工比对不可靠。模式（`sw_check_interfaces.py`）：
 
 ```python
-from sw_check_interfaces import cyl_axes, hole_centers, pcd_and_angle
+from solidworks_2026_skill.sw_check_interfaces import cyl_axes, hole_centers, pcd_and_angle
 
 axes = cyl_axes("PartA.STEP")                  # [(r, cx,cy,cz, ax,ay,az), ...]
 pts  = hole_centers(axes, r_mm=1.75, axis="Y") # 指定半径+轴向的孔心去重

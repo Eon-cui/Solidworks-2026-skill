@@ -1,5 +1,7 @@
 # SolidWorks API 查证流程
 
+> ⚠ 本文档来自上游，路径引用为旧版 `scripts/` 目录名，新版已改为 `solidworks_2026_skill/`。
+
 当任务需要使用 `scripts/` 尚未封装的 SolidWorks API 时，先查证再实现。不要凭记忆补长参数、枚举值或返回值。
 
 ## 优先资料源

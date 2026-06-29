@@ -171,7 +171,11 @@ def find_template(sw, doc_type="part"):
         if matches:
             return matches[0]
 
-    raise FileNotFoundError(f"无法找到 {doc_type} 模板文件，请手动指定路径")
+    raise FileNotFoundError(
+        f"无法找到 {doc_type} 模板文件。\n"
+        f"  尝试设置环境变量: SW_INSTALL_DIR=SW安装目录, SW_TEMPLATES_DIR=模板目录\n"
+        f"  或手动指定 template_path 参数。"
+    )
 
 
 def new_document(sw, doc_type="part", template_path=None):

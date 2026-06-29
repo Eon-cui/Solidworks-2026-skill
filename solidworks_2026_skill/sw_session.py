@@ -12,7 +12,6 @@ sw_session.py — SW2026 会话管理 (with 模式 + 清场 + 面数追踪 + COM
 import sys
 # stdout configured by solidworks_2026_skill._compat
 import os
-import glob
 import math
 import time
 import pythoncom
@@ -36,15 +35,6 @@ def connect(visible=True, wait_seconds=3):
         return sw
 
 
-def find_template(pattern="*.prtdot"):
-    """模板查找: 注册表键可能为空/幽灵路径 → glob 兜底"""
-    for d in (r"C:\ProgramData\SolidWorks\SOLIDWORKS *\templates",):
-        hits = glob.glob(os.path.join(d, pattern))
-        if hits:
-            return hits[0]
-    raise FileNotFoundError(f"找不到 SW 模板: {pattern}")
-
-
 # ── COM 模式四件套 (references/com-patterns.md) ──
 # VN/VBR/mm/deg/_v/genmod/early/put_object_property/untuple 从 _com_helpers 导入
 
@@ -59,7 +49,8 @@ class SW:
     def __enter__(self):
         self.sw = connect()
         self.sw.CloseAllDocuments(True)          # 铁律: 清场
-        tpl = find_template("*.prtdot")
+        from solidworks_2026_skill.sw_connect import find_template as _find_tpl
+        tpl = _find_tpl(self.sw, "part")
         self.model = self.sw.NewDocument(tpl, 0, 0, 0) or _v(self.sw.ActiveDoc)
         if self.model is None:
             raise RuntimeError("NewDocument 失败 (模板路径/幽灵模板?)")

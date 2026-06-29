@@ -5,9 +5,8 @@
 ## 1. 位姿级插入组件
 
 ```python
-import sys; sys.path.insert(0, r"SKILL_DIR/scripts")
-from sw_session import connect, genmod
-from sw_assembly import new_assembly, add_component_posed
+from solidworks_2026_skill.sw_session import connect, genmod
+from solidworks_2026_skill.sw_assembly import new_assembly, add_component_posed
 
 sw = connect()                      # GetActiveObject 优先
 sw.CloseAllDocuments(True)          # 铁律 8: 清场

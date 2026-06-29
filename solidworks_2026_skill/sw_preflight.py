@@ -258,7 +258,7 @@ def main() -> int:
 
 
 def get_sw_install_dir() -> str:
-    """SolidWorks installation directory. SW_INSTALL_DIR env var > default search."""
+    """SolidWorks installation directory. SW_INSTALL_DIR env var > default search > registry fallback."""
     env = os.environ.get("SW_INSTALL_DIR", "")
     if env and os.path.isdir(env):
         return env
@@ -269,6 +269,36 @@ def get_sw_install_dir() -> str:
         for path in glob.glob(pattern):
             if os.path.isdir(path):
                 return path
+    # Registry fallback: CLSID → LocalServer32, then try HKLM\SOFTWARE\SolidWorks\Applications
+    try:
+        import winreg
+        try:
+            clsid = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, r"SldWorks.Application\CLSID")
+            server_path = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, rf"CLSID\{clsid}\LocalServer32")
+            if server_path:
+                install_dir = os.path.dirname(server_path.strip('"'))
+                if os.path.isdir(install_dir):
+                    return install_dir
+        except OSError:
+            pass
+        # Fallback: iterate HKLM\SOFTWARE\SolidWorks\Applications subkeys for InstallDir
+        try:
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\SolidWorks\Applications") as apps_key:
+                i = 0
+                while True:
+                    try:
+                        subkey_name = winreg.EnumKey(apps_key, i)
+                        with winreg.OpenKey(apps_key, subkey_name) as subkey:
+                            install_dir, _ = winreg.QueryValueEx(subkey, "InstallDir")
+                            if os.path.isdir(install_dir):
+                                return install_dir
+                    except OSError:
+                        pass
+                    i += 1
+        except OSError:
+            pass
+    except ImportError:
+        pass
     return ""
 
 
