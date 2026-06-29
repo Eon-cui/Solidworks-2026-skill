@@ -1,0 +1,68 @@
+solidworks-2026-skill — 分层测试结果
+========================================
+运行时间: 2026-06-29
+Python:   3.13.13
+平台:     Windows 11 (win32)
+命令:     py -3.13 -m pytest tests/ -v --tb=short
+
+=== L1 — 安装与导入 (纯 Python, 无需 SW) ===
+
+  [PASS] test_all_symbols_importable          — __all__ 30 符号全部 lazy-import 成功
+  [PASS] test_com_helpers_14_symbols          — _com_helpers 14 公开符号可导入
+  [PASS] test_fc3_params_length_26            — FeatureCut3 参数 tuple 长度 = 26
+  [PASS] test_fe3_params_length_23            — FeatureExtrusion3 参数 tuple 长度 = 23
+  [PASS] test_mcp_server_importable           — mcp.server 可导入 (未启动)
+
+  L1 结果: 5/5 PASS
+
+=== L2 — 纯 Python 功能 (无需 SW) ===
+
+  [PASS] test_verify_step_fixture             — verify_step 对 test_cylinders.STEP 返回正确
+  [PASS] test_verify_step_max_circle          — max_circle=0 边界行为正确
+  [PASS] test_verify_step_with_holes          — expected_holes=[] 无假阳性
+  [PASS] test_parse_step_entities             — STEP 文本解析: 3 CYLINDRICAL_SURFACE + 3 AXIS2_PLACEMENT_3D + 3 CARTESIAN_POINT
+  [PASS] test_discover_refs_fixture           — discover_refs 正确分类 hole/boss (h1+b1)
+  [PASS] test_checker_class                   — Checker 实例化 + eq/true/report 方法
+
+  L2 结果: 6/6 PASS
+
+=== L3 — 错误处理与边界 (无需 SW) ===
+
+  [PASS] test_verify_step_nonexistent_file    — 不存在文件抛出 OSError
+  [PASS] test_verify_step_empty_file          — 空文件不崩溃, 返回 (bool, str)
+  [PASS] test_verify_step_non_step_content    — 非 STEP 内容不崩溃
+  [PASS] test_mm_zero                         — mm(0)=0.0, mm(1000)=1.0, mm(-500)=-0.5
+  [PASS] test_deg_zero                        — deg(0)=0.0, deg(90)=π/2
+  [PASS] test_untuple_tuple                   — untuple 行为: 返回 tuple[0] 或直接 pass-through
+  [PASS] test_untuple_none                    — untuple(None)=None
+  [PASS] test_vn_vbr_types                    — VN() → VT_DISPATCH(9), VBR() → VT_BYREF|VT_I4(16387)
+  [PASS] test_fc3_params_variants             — FC3 through_all/flip/dir_flag/depth 变体
+  [PASS] test_fe3_params_variants             — FE3 reverse/merge/midplane/through_all 变体
+  [PASS] test_safe_get_com_member_on_plain_object — get_com_member 对普通 Python 对象正确
+
+  L3 结果: 11/11 PASS
+
+=== 现有测试 (验证未退化) ===
+
+  [PASS] test_no_text_to_cad_references       — 零 text-to-cad 依赖
+  [PASS] test_all_py_files_compile            — 全部 .py 编译通过
+  [PASS] test_init_imports_matches_files      — __all__ 与模块文件一致
+  [PASS] test_discover_refs                   — discover_refs roundtrip
+
+  现有测试: 4/4 PASS
+
+=== L4 — SW 连通性 ===
+
+  [MANUAL] SW 未运行 — L4 测试需手动执行
+  检测命令:
+    python.exe -c "from win32com.client import GetObject; sw = GetObject(None, 'SldWorks.Application', None); print(sw.RevisionNumber())"
+
+  L4 测试项 (需 SW 运行中):
+    14. SW GetObject 连接成功
+    15. 模板查找成功 (glob gb_part.prtdot)
+    16. 简单草图 + 拉伸 + 保存 → 面数验证
+
+=== 总计 ===
+
+  自动: 26/26 PASS (L1:5 + L2:6 + L3:11 + 现有:4)
+  手动: L4 待 SW 启动后执行
