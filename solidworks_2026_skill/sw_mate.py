@@ -15,9 +15,9 @@ sw_mate.py — 程序化面选择 mate 自动化 (SW2026 装配实战验证)
 import sys
 # stdout configured by solidworks_2026_skill._compat
 try:
-    from .sw_session import genmod, untuple, _v
+    from ._com_helpers import genmod, untuple, _v
 except ImportError:
-    from sw_session import genmod, untuple, _v
+    from _com_helpers import genmod, untuple, _v
 
 SW_MATE_COINCIDENT = 0
 SW_MATE_CONCENTRIC = 1
@@ -200,9 +200,9 @@ def fix_component(asm_model, comp_e):
 def _save_as(asm_model, path):
     """SaveAs 双形态兼容: dynamic 要 VARIANT 包裹, early-bound 要裸参 (返回 tuple)。"""
     try:
-        from .sw_session import VN, VBR
+        from ._com_helpers import VN, VBR
     except ImportError:
-        from sw_session import VN, VBR
+        from _com_helpers import VN, VBR
     try:
         return untuple(asm_model.Extension.SaveAs(path, 0, 1, VN(), VBR(), VBR()))
     except Exception:

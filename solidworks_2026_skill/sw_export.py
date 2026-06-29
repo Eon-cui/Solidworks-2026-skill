@@ -8,10 +8,10 @@ import os
 
 try:
     from .sw_preflight import import_com_dependencies
-    from .sw_connect import create_empty_dispatch_variant, get_com_member
+    from ._com_helpers import VN, get_com_member
 except ImportError:
     from sw_preflight import import_com_dependencies
-    from sw_connect import create_empty_dispatch_variant, get_com_member
+    from _com_helpers import VN, get_com_member
 
 pythoncom, _win32com, VARIANT = import_com_dependencies()
 
@@ -176,7 +176,7 @@ def _export_generic(model, output_path):
     warnings = VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
 
     success = model.Extension.SaveAs(
-        output_path, 0, 1, create_empty_dispatch_variant(), errors, warnings
+        output_path, 0, 1, VN(), errors, warnings
     )
 
     ext = os.path.splitext(output_path)[1].upper()

@@ -15,6 +15,11 @@ except ImportError:
 
 pythoncom, win32com_client, VARIANT = import_com_dependencies()
 
+try:
+    from ._com_helpers import VN, VBR, mm, deg, _v, get_com_member
+except ImportError:
+    from _com_helpers import VN, VBR, mm, deg, _v, get_com_member
+
 
 DOC_TYPE_MAP = {
     "part": 1,
@@ -34,37 +39,6 @@ DOC_TYPE_LABELS = {
     "drawing": "工程图",
 }
 
-
-def get_com_member(obj, attr_name, *args):
-    """
-    兼容 pywin32 中“同一成员在不同环境下可能是属性也可能是方法”的情况。
-
-    参数:
-        obj: COM 对象
-        attr_name: 成员名称
-        *args: 当成员可调用时传入的参数
-
-    返回:
-        成员值或调用结果
-    """
-    member = getattr(obj, attr_name)
-    if args:
-        return member(*args)
-    try:
-        return member() if callable(member) else member
-    except Exception as exc:
-        message = str(exc)
-        if "-2147352573" in message or "找不到成员" in message or "Member not found" in message:
-            return member
-        raise
-
-
-safe_get_com_member = get_com_member  # legacy alias — use get_com_member()
-
-
-def create_empty_dispatch_variant():
-    """创建可传给 COM 接口的空 Dispatch 参数。"""
-    return VARIANT(pythoncom.VT_DISPATCH, None)
 
 
 def normalize_doc_type(doc_type):
@@ -259,8 +233,8 @@ def open_document(sw, file_path, read_only=False, silent=False, raise_on_error=F
     type_map = {".sldprt": 1, ".sldasm": 2, ".slddrw": 3, ".step": 1, ".stp": 1, ".igs": 1, ".iges": 1}
     doc_type = type_map.get(ext, 1)
 
-    errors = VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
-    warnings = VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
+    errors = VBR()
+    warnings = VBR()
     options = 2 if read_only else 0  # swOpenDocOptions_ReadOnly = 2
     if silent:
         options |= 1  # swOpenDocOptions_Silent = 1
@@ -287,14 +261,14 @@ def save_document(model, file_path=None):
     返回:
         bool 成功/失败
     """
-    errors = VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
-    warnings = VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
+    errors = VBR()
+    warnings = VBR()
 
     if file_path:
         file_path = _expand_path(file_path)
         _ensure_parent_dir(file_path)
         success = model.Extension.SaveAs(
-            file_path, 0, 1, create_empty_dispatch_variant(), errors, warnings
+            file_path, 0, 1, VN(), errors, warnings
         )
     else:
         success = model.Save3(1, errors, warnings)
@@ -305,13 +279,3 @@ def save_document(model, file_path=None):
         print(f"保存失败, 错误码: {errors.value}, 警告码: {warnings.value}")
     return bool(success)
 
-
-def mm(value):
-    """毫米转米（SolidWorks API 单位）。"""
-    return value / 1000.0
-
-
-def deg(value):
-    """角度转弧度。"""
-    import math
-    return value * math.pi / 180.0

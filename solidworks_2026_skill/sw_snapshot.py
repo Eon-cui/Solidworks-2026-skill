@@ -7,7 +7,6 @@ import sys
 # stdout configured by solidworks_2026_skill._compat
 import os
 import math
-from PIL import Image
 
 
 # ── SW 命名视图 ID (中英文兼容) ──
@@ -55,6 +54,14 @@ def _save_bmp(model, path: str, width: int = 2400, height: int = 1800) -> str:
     model.SaveBMP(path, width, height)
 
     # Crop white/black empty border + save as PNG
+    try:
+        from PIL import Image
+    except ImportError:
+        raise ImportError(
+            "Pillow is required for snapshot BMP→PNG conversion. "
+            "Install with: pip install Pillow"
+        )
+
     png_path = path.rsplit(".", 1)[0] + ".png"
     img = Image.open(path)
     # Auto-crop: remove solid-color border (tolerance=10)

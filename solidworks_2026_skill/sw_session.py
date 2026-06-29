@@ -17,37 +17,11 @@ import math
 import time
 import pythoncom
 from win32com.client import GetActiveObject, VARIANT
-
-SW_TYPELIB = "{83A33D31-27C5-11CE-BFD4-00400513BB57}"
-DISPID_TRANSFORM2 = 78
-
-
-def VN():
-    """空对象位 VARIANT (Callout/ExportData) — 裸 None 会 TYPEMISMATCH"""
-    return VARIANT(pythoncom.VT_DISPATCH, None)
-
-
-def VBR():
-    """byref int 输出 VARIANT (errors/warnings)"""
-    return VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
-
-
-def mm(value):
-    """毫米 → 米 (SW API 单位)"""
-    return value / 1000.0
-
-
-M = mm  # legacy alias — use mm()
-
-
-def deg(value):
-    return value * math.pi / 180.0
-
-
-def _v(x):
-    """pywin32 属性/方法歧义兼容 (EditRebuild3/GetTitle 可能是属性)"""
-    return x() if callable(x) else x
-
+from solidworks_2026_skill._com_helpers import (
+    VN, VBR, mm, deg, _v, genmod, early, put_object_property, untuple,
+    SW_TYPELIB, DISPID_TRANSFORM2,
+)
+M = mm  # legacy alias — 保持向后兼容
 
 def connect(visible=True, wait_seconds=3):
     """连接 SW。GetActiveObject 优先 — Dispatch 每次开新实例 (一天积压17个的教训)。"""
@@ -72,34 +46,7 @@ def find_template(pattern="*.prtdot"):
 
 
 # ── COM 模式四件套 (references/com-patterns.md) ──
-
-def genmod():
-    """gen_py 模块。SW 不支持 GetTypeInfo → CastTo/EnsureDispatch 全废,
-    必须手动包装: genmod().IXxx(obj._oleobj_)"""
-    import win32com.client.gencache as gc
-    try:
-        return gc.GetModuleForTypelib(SW_TYPELIB, 0, 34, 0)
-    except Exception:
-        gc.MakeModuleForTypelib(SW_TYPELIB, 0, 0, 34)
-        return gc.GetModuleForTypelib(SW_TYPELIB, 0, 34, 0)
-
-
-def early(obj, iface):
-    """dynamic dispatch → early-bound 接口包装。
-    用途: MathUtility.CreateTransform / Component2 / FirstFeature 等 dynamic 失败的成员"""
-    return getattr(genmod(), iface)(obj._oleobj_)
-
-
-def put_object_property(com_obj, dispid, value_dispatch):
-    """对象属性赋值 — 必须 DISPATCH_PROPERTYPUTREF (makepy 的 put 会"找不到成员")
-    例: put_object_property(comp, DISPID_TRANSFORM2, xform)"""
-    com_obj._oleobj_.Invoke(dispid, 0, pythoncom.DISPATCH_PROPERTYPUTREF, 0,
-                            value_dispatch._oleobj_)
-
-
-def untuple(ret):
-    """early-bound 方法 (GetBodies3 等) 返回 (data, info) tuple 的兼容解包"""
-    return ret[0] if isinstance(ret, tuple) else ret
+# VN/VBR/mm/deg/_v/genmod/early/put_object_property/untuple 从 _com_helpers 导入
 
 
 class SW:
@@ -128,6 +75,11 @@ class SW:
             print(f"[{self.part_name}] 窗口已关")
         except Exception:
             pass
+        finally:
+            try:
+                pythoncom.CoUninitialize()
+            except Exception:
+                pass
         return False
 
     # ── 面数追踪 (铁律 3: 防假成功 L2) ──
@@ -199,31 +151,28 @@ class SW:
     def exit_sketch(self):
         self.model.InsertSketch2(True)
 
-    # ── 特征 (已验证签名) ──
+    # ── 特征 (参数来自 _com_signatures 单一事实来源) ──
     def extrude(self, depth, reverse=False):
-        """FeatureExtrusion3 — 23 参数 (一个不能多/少)"""
-        f = self.fm.FeatureExtrusion3(
-            True, reverse, False, 0, 0, M(depth), 0.0,
-            False, False, False, False, 0.0, 0.0,
-            False, False, False, False,
-            True, False, True, 0, 0.0, False)
+        """FeatureExtrusion3。参数委托 _com_signatures.feature_extrusion3_params。
+        NOTE: 不委托 sw_part.extrude_boss — 后者需要 sketch_name 且 direction≠reverse 语义。"""
+        from solidworks_2026_skill._com_signatures import feature_extrusion3_params
+        params = feature_extrusion3_params(depth_m=M(depth), reverse=reverse, merge=True)
+        f = self.fm.FeatureExtrusion3(*params)
         if f is None:
             raise RuntimeError(f"FeatureExtrusion3 None (d={depth})")
         return f
 
     def cut(self, depth=0, through_all=False):
-        """FeatureCut3 26 参数 — 铁律 NormalCut=False。
-        4 路重试: (flip, direction) 矩阵。Flip=True 仅最后手段(可能反切主体!)"""
-        t1 = 1 if through_all else 0
-        d1 = 0.001 if through_all else M(depth)
+        """FeatureCut3 — 参数委托 _com_signatures.feature_cut3_params。
+        4 路重试: (flip, direction) 矩阵。Flip=True 仅最后手段(可能反切主体!)
+        NOTE: 不委托 sw_part.extrude_cut — 后者需要 sketch_name 且无方向重试。"""
+        from solidworks_2026_skill._com_signatures import feature_cut3_params
+        d_m = M(depth)
         for flip, direction in [(False,False), (False,True), (True,False), (True,True)]:
-            f = self.fm.FeatureCut3(
-                True, flip, direction, t1, 0, d1, 0.0,
-                False, False, False, False, 0.0, 0.0,
-                False, False, False, False,
-                False,  # NormalCut=False 铁律!
-                True, True, True, True, False,
-                0, 0.0, False)
+            params = feature_cut3_params(
+                through_all=through_all, depth_m=d_m,
+                flip=flip, normal_cut=False, dir_flag=direction)
+            f = self.fm.FeatureCut3(*params)
             if f is not None:
                 if flip or direction:
                     print(f"     (cut: flip={flip} dir={direction})")

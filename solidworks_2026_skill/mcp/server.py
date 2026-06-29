@@ -208,6 +208,49 @@ def _init_com():
             traceback.print_exc()
 
 
+# ── Bilingual plane/view name resolution (Fix 4: 英文 SW 兼容) ──
+
+_PLANE_NAMES = {
+    "前视基准面": ["前视基准面", "Front Plane"],
+    "上视基准面": ["上视基准面", "Top Plane"],
+    "右视基准面": ["右视基准面", "Right Plane"],
+    "Front Plane": ["Front Plane", "前视基准面"],
+    "Top Plane": ["Top Plane", "上视基准面"],
+    "Right Plane": ["Right Plane", "右视基准面"],
+}
+
+_VIEW_NAMES = {
+    "*前视": ["*前视", "*Front"],
+    "*上视": ["*上视", "*Top"],
+    "*右视": ["*右视", "*Right"],
+    "*后视": ["*后视", "*Back"],
+    "*下视": ["*下视", "*Bottom"],
+    "*左视": ["*左视", "*Left"],
+    "*等轴测": ["*等轴测", "*Isometric", "*上下二等角轴测", "*Dimetric"],
+}
+
+
+def _select_plane(model_ext, plane: str) -> str | None:
+    """Try plane name fallbacks (中→英). Returns matched name or None."""
+    names = _PLANE_NAMES.get(plane, [plane])
+    for nm in names:
+        if model_ext.SelectByID2(nm, "PLANE", 0, 0, 0, _vb(False), _vi4(0), _vn(), _vi4(0)):
+            return nm
+    return None
+
+
+def _show_named_view(model, view_key: str) -> bool:
+    """Try named view with bilingual fallbacks. Returns True on success."""
+    names = _VIEW_NAMES.get(view_key, [view_key])
+    for nm in names:
+        try:
+            if model.ShowNamedView2(nm, -1):
+                return True
+        except Exception:
+            continue
+    return False
+
+
 def _get_sw():
     """获取或连接 SolidWorks。优先连接已有实例，没有则启动新的。
     
@@ -477,8 +520,7 @@ async def sw_save() -> str:
 async def sw_save_as(filepath: str) -> str:
     """另存为 .SLDPRT。"""
     model = _get_model()
-    abs_path = os.path.abspath(filepath)
-    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+    abs_path = _validate_output_path(filepath)
     errors = _byref_int(0)
     warnings = _byref_int(0)
     ext = model.Extension
@@ -490,8 +532,7 @@ async def sw_save_as(filepath: str) -> str:
 async def sw_export_step(filepath: str) -> str:
     """导出 STEP AP214。"""
     model = _get_model()
-    abs_path = os.path.abspath(filepath)
-    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+    abs_path = _validate_output_path(filepath)
     errors = _byref_int(0)
     warnings = _byref_int(0)
     ret = _safe_com_call(model.Extension.SaveAs, abs_path, _vi4(0), _vi4(1), _vn(), errors, warnings)
@@ -502,8 +543,7 @@ async def sw_export_step(filepath: str) -> str:
 async def sw_export_stl(filepath: str) -> str:
     """导出 STL（3D 打印）。"""
     model = _get_model()
-    abs_path = os.path.abspath(filepath)
-    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+    abs_path = _validate_output_path(filepath)
     errors = _byref_int(0)
     warnings = _byref_int(0)
     ret = _safe_com_call(model.Extension.SaveAs, abs_path, _vi4(0), _vi4(1), _vn(), errors, warnings)
@@ -514,8 +554,7 @@ async def sw_export_stl(filepath: str) -> str:
 async def sw_export_dxf(filepath: str) -> str:
     """导出 DXF。"""
     model = _get_model()
-    abs_path = os.path.abspath(filepath)
-    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+    abs_path = _validate_output_path(filepath)
     errors = _byref_int(0)
     warnings = _byref_int(0)
     ret = _safe_com_call(model.Extension.SaveAs, abs_path, _vi4(0), _vi4(1), _vn(), errors, warnings)
@@ -526,8 +565,7 @@ async def sw_export_dxf(filepath: str) -> str:
 async def sw_export_pdf(filepath: str) -> str:
     """导出工程图为 PDF。"""
     model = _get_model()
-    abs_path = os.path.abspath(filepath)
-    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+    abs_path = _validate_output_path(filepath)
     errors = _byref_int(0)
     warnings = _byref_int(0)
     ret = _safe_com_call(model.Extension.SaveAs, abs_path, _vi4(0), _vi4(1), _vn(), errors, warnings)
@@ -575,12 +613,13 @@ async def sw_force_rebuild() -> str:
 
 @mcp.tool()
 async def sw_sketch_create(plane: str = "前视基准面") -> str:
-    """在基准面上新建草图。plane: 前视/上视/右视基准面。"""
+    """在基准面上新建草图。plane: 前视/上视/右视基准面 (中英文兼容)。"""
     model_ext = _model_ext()
-    if not model_ext.SelectByID2(plane, "PLANE", 0, 0, 0, _vb(False), _vi4(0), _vn(), _vi4(0)):
+    matched = _select_plane(model_ext, plane)
+    if not matched:
         return f"未找到基准面: {plane}"
     _sketch_mgr().InsertSketch(True)
-    return f"草图: {plane}"
+    return f"草图: {matched}"
 
 
 @mcp.tool()
@@ -995,9 +1034,10 @@ async def sw_get_selected_names() -> str:
 async def sw_create_plane_offset(offset: float = 0.01, reference: str = "前视基准面") -> str:
     """偏移基准面。"""
     model_ext = _model_ext()
-    if model_ext.SelectByID2(reference, "PLANE", 0, 0, 0, _vb(False), _vi4(0), _vn(), _vi4(0)):
+    matched = _select_plane(model_ext, reference)
+    if matched:
         _feature_mgr().InsertRefPlane(8, offset, 0, 0, 0, 0)
-        return f"偏移面: {reference}+{offset}"
+        return f"偏移面: {matched}+{offset}"
     return f"未找到: {reference}"
 
 
@@ -1159,32 +1199,32 @@ async def sw_switch_config(name: str) -> str:
 
 @mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_front() -> str:
-    _get_model().ShowNamedView2("*前视", -1)
+    _show_named_view(_get_model(), "*前视")
     return "前视图"
 
 @mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_top() -> str:
-    _get_model().ShowNamedView2("*上视", -1)
+    _show_named_view(_get_model(), "*上视")
     return "上视图"
 
 @mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_right() -> str:
-    _get_model().ShowNamedView2("*右视", -1)
+    _show_named_view(_get_model(), "*右视")
     return "右视图"
 
 @mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_back() -> str:
-    _get_model().ShowNamedView2("*后视", -1)
+    _show_named_view(_get_model(), "*后视")
     return "后视图"
 
 @mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_bottom() -> str:
-    _get_model().ShowNamedView2("*下视", -1)
+    _show_named_view(_get_model(), "*下视")
     return "下视图"
 
 @mcp.tool(annotations=_ANNO_READONLY)
 async def sw_view_isometric() -> str:
-    _get_model().ShowNamedView2("*等轴测", -1)
+    _show_named_view(_get_model(), "*等轴测")
     return "等轴测"
 
 @mcp.tool(annotations=_ANNO_READONLY)
@@ -1275,7 +1315,7 @@ async def sw_review_quick() -> str:
     # title
     lines.append(f"文档: {_com_attr(model, 'GetTitle')}")
     # isometric
-    model.ShowNamedView2("*等轴测", -1)
+    _show_named_view(model, "*等轴测")
     model.ViewZoomtofit2()
     # bounding box
     try:
@@ -1329,7 +1369,7 @@ async def sw_review_all_views() -> str:
     ]
     for name, view_name in views:
         try:
-            model.ShowNamedView2(view_name, -1)
+            _show_named_view(model, view_name)
             await asyncio.sleep(0.3)
         except Exception:
             traceback.print_exc()
@@ -1382,8 +1422,7 @@ async def sw_review_thickness_check(min_thickness: float = 0.0005) -> str:
 async def sw_review_export_screenshot(filepath: str) -> str:
     """导出当前视图截图（SaveAs JPEG）。"""
     model = _get_model()
-    abs_path = os.path.abspath(filepath)
-    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+    abs_path = _validate_output_path(filepath)
     errors = _byref_int(0)
     warnings = _byref_int(0)
     ret = model.Extension.SaveAs(abs_path, _vi4(0), _vi4(1), _vn(), errors, warnings)
@@ -1789,8 +1828,19 @@ async def run_server():
     await mcp.run_stdio_async()
 
 
+def _cleanup_com():
+    """Release COM on shutdown (pair with _init_com CoInitialize)."""
+    if HAS_COM:
+        try:
+            pythoncom.CoUninitialize()
+        except Exception:
+            pass
+
+
 def main():
     """CLI entry point for sw-mcp"""
+    import atexit
+    atexit.register(_cleanup_com)
     asyncio.run(run_server())
 
 

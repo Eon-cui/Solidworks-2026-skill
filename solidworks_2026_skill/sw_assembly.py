@@ -20,9 +20,9 @@ import pythoncom
 from win32com.client import VARIANT
 
 try:
-    from .sw_session import VN, VBR, M, _v, genmod, early, put_object_property, untuple, DISPID_TRANSFORM2
+    from ._com_helpers import VN, VBR, M, _v, genmod, early, put_object_property, untuple, DISPID_TRANSFORM2, get_com_member
 except ImportError:
-    from sw_session import VN, VBR, M, _v, genmod, early, put_object_property, untuple, DISPID_TRANSFORM2
+    from _com_helpers import VN, VBR, M, _v, genmod, early, put_object_property, untuple, DISPID_TRANSFORM2, get_com_member
 
 SW_MATE_COINCIDENT = 0
 SW_MATE_CONCENTRIC = 1
@@ -31,18 +31,6 @@ SW_MATE_DISTANCE = 5
 SW_MATE_GEAR = 6
 SW_MATE_LOCK = 16
 SW_ADD_MATE_ERROR_NO_ERROR = 1
-
-
-def _safe(obj, attr, *args):
-    member = getattr(obj, attr)
-    if args:
-        return member(*args)
-    try:
-        return member() if callable(member) else member
-    except Exception as exc:
-        if "Member not found" in str(exc) or "-2147352573" in str(exc) or "找不到成员" in str(exc):
-            return member
-        raise
 
 
 def new_assembly(sw):
@@ -111,9 +99,9 @@ def resolve_component(component, state=2):
 def get_component_model(component, resolve=True):
     if resolve:
         resolve_component(component)
-    model = _safe(component, "GetModelDoc2")
+    model = get_com_member(component, "GetModelDoc2")
     if model is None:
-        raise RuntimeError(f"组件未解析: {_safe(component, 'Name2')}")
+        raise RuntimeError(f"组件未解析: {get_com_member(component, 'Name2')}")
     return model
 
 
@@ -121,7 +109,7 @@ def get_assembly_entity(component, feature_or_face):
     """零件内对象 → 当前组件实例的装配体上下文 (GetCorresponding)。"""
     entity = component.GetCorresponding(feature_or_face)
     if entity is None:
-        raise RuntimeError(f"无法映射装配上下文: {_safe(component, 'Name2')}")
+        raise RuntimeError(f"无法映射装配上下文: {get_com_member(component, 'Name2')}")
     return entity
 
 
@@ -131,25 +119,25 @@ def find_largest_cylinder_face(component, min_radius=0.0, max_radius=None, resol
     part = get_component_model(component, resolve=resolve)
     max_radius = float("inf") if max_radius is None else float(max_radius)
     best_face, best_area = None, -1.0
-    bodies = _safe(part, "GetBodies2", 0, False) or []
+    bodies = get_com_member(part, "GetBodies2", 0, False) or []
     for body in bodies:
-        for face in (_safe(body, "GetFaces") or []):
-            surface = _safe(face, "GetSurface")
+        for face in (get_com_member(body, "GetFaces") or []):
+            surface = get_com_member(face, "GetSurface")
             if not surface:
                 continue
             try:
-                if not _safe(surface, "IsCylinder"):
+                if not get_com_member(surface, "IsCylinder"):
                     continue
-                radius = float(_safe(surface, "CylinderParams")[6])
+                radius = float(get_com_member(surface, "CylinderParams")[6])
                 if radius < min_radius or radius > max_radius:
                     continue
-                area = float(_safe(face, "GetArea"))
+                area = float(get_com_member(face, "GetArea"))
                 if area > best_area:
                     best_area, best_face = area, face
             except Exception:
                 continue
     if best_face is None:
-        raise RuntimeError(f"未找到圆柱面: {_safe(component, 'Name2')}")
+        raise RuntimeError(f"未找到圆柱面: {get_com_member(component, 'Name2')}")
     return get_assembly_entity(component, best_face)
 
 
@@ -227,26 +215,26 @@ def iter_feature_tree(model, include_subfeatures=True):
     feature = me.FirstFeature()
 
     def walk_sub(parent, depth):
-        sub = _safe(parent, "GetFirstSubFeature")
+        sub = get_com_member(parent, "GetFirstSubFeature")
         while sub:
             yield sub, depth
             if include_subfeatures:
                 yield from walk_sub(sub, depth + 1)
-            sub = _safe(sub, "GetNextSubFeature")
+            sub = get_com_member(sub, "GetNextSubFeature")
 
     while feature:
         yield feature, 0
         if include_subfeatures:
             yield from walk_sub(feature, 1)
-        feature = _safe(feature, "GetNextFeature")
+        feature = get_com_member(feature, "GetNextFeature")
 
 
 def collect_mate_feature_summary(model):
     """收集 MateGroup 及子 Mate — 验证真实配合写入特征树 (不是脚本假动画)。"""
     result = []
     for feature, depth in iter_feature_tree(model):
-        name = _safe(feature, "Name")
-        type_name = str(_safe(feature, "GetTypeName2"))
+        name = get_com_member(feature, "Name")
+        type_name = str(get_com_member(feature, "GetTypeName2"))
         if type_name == "MateGroup" or type_name.startswith("Mate") or "配合" in str(name):
             result.append({"name": name, "type": type_name, "depth": depth})
     return result
