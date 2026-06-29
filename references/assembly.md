@@ -5,11 +5,12 @@
 ## 1. 位姿级插入组件
 
 ```python
-from solidworks_2026_skill.sw_session import connect, genmod
+from solidworks_2026_skill._com_helpers import genmod
+from solidworks_2026_skill.sw_connect import connect_solidworks
 from solidworks_2026_skill.sw_assembly import new_assembly, add_component_posed
 
-sw = connect()                      # GetActiveObject 优先
-sw.CloseAllDocuments(True)          # 铁律 8: 清场
+sw, _ = connect_solidworks()           # GetActiveObject first, Dispatch fallback
+sw.CloseAllDocuments(True)             # iron rule: clean workspace
 asm = new_assembly(sw)
 
 # 姿态矩阵: 行约定 p_world = p_local·R + t

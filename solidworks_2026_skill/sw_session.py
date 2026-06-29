@@ -23,16 +23,12 @@ from solidworks_2026_skill._com_helpers import (
 M = mm  # legacy alias — 保持向后兼容
 
 def connect(visible=True, wait_seconds=3):
-    """连接 SW。GetActiveObject 优先 — Dispatch 每次开新实例 (一天积压17个的教训)。"""
-    pythoncom.CoInitialize()
-    try:
-        return GetActiveObject("SldWorks.Application")
-    except pythoncom.com_error:
-        from win32com.client import dynamic
-        sw = dynamic.Dispatch("SldWorks.Application")
-        sw.Visible = visible
-        time.sleep(wait_seconds)
-        return sw
+    """Connect to SW (GetActiveObject first, Dispatch fallback).
+    Thin wrapper around connect_solidworks — returns sw only for backward compat.
+    Prefer connect_solidworks() for new code."""
+    from solidworks_2026_skill.sw_connect import connect_solidworks as _raw
+    sw, _ = _raw(visible=visible, wait_seconds=wait_seconds)
+    return sw
 
 
 # ── COM 模式四件套 (references/com-patterns.md) ──
@@ -47,6 +43,7 @@ class SW:
         self.faces_log = []
 
     def __enter__(self):
+        pythoncom.CoInitialize()
         self.sw = connect()
         self.sw.CloseAllDocuments(True)          # 铁律: 清场
         from solidworks_2026_skill.sw_connect import find_template as _find_tpl
