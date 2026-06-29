@@ -84,7 +84,7 @@ print(report); assert ok
 |------|------|----------|
 | 环境自检（依赖+SW 安装） | `solidworks_2026_skill/sw_preflight.py` | `references/troubleshooting.md` |
 | 会话管理（with 清场/面数追踪/genmod） | `solidworks_2026_skill/sw_session.py` | `references/com-patterns.md` |
-| 连接/打开/新建/模板查找 | `solidworks_2026_skill/sw_connect.py` | — |
+| 连接/打开/新建/模板查找 | `solidworks_2026_skill/sw_connect.py` | `references/connect.md` |
 | 零件建模（草图+特征，修复版） | `solidworks_2026_skill/sw_part.py` | `references/part-modeling.md` |
 | 装配体（位姿级插入 add_component_posed） | `solidworks_2026_skill/sw_assembly.py` | `references/assembly.md` |
 | 配合（程序化面选择 mate） | `solidworks_2026_skill/sw_mate.py` | `references/assembly.md` |

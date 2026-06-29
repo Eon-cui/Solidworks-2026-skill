@@ -6,10 +6,20 @@
 - `face()` 13-point coordinate retry (center → 4-way → 8-way offsets)
 - `TestL3ErrorMessages` regression tests for error message format
 - `plane()` defaults: English-first names (Front/Top/Right + Chinese fallback)
+- `references/connect.md` — connection function comparison and usage guide
 
 ### Changed
 - **All runtime messages English** (~55 raises/prints/returns across 7 modules)
 - `sketch_on_face()` docstring warns users to prefer `sketch_on_plane()`
+- `sketch_on_plane()` defaults now English-first 6-name tuple (matching `plane()`)
+- MCP `sw_sketch_create`/`sw_create_plane_offset` defaults English-first
+- Connect layer: `connect()` now thin wrapper; `CoInitialize` properly paired
+- `DOC_TYPE_LABELS`: Chinese → English
+- Quick Start examples: `sketch_on_face` → plane-based workflow (SKILL.md + README.md)
+
+### Removed
+- `_checkpoints/` build artifacts
+- `Co-Authored-By: Claude` from all git history (contributor cleanup)
 - `connect()` now thin wrapper around `connect_solidworks()` (backward compat)
 - `DOC_TYPE_LABELS`: Chinese → English
 - Quick Start examples: `sketch_on_face` → plane-based workflow (SKILL.md + README.md)
