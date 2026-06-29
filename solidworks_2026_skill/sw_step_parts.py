@@ -122,7 +122,7 @@ def download_and_import(sw, part: dict, out_dir: str) -> str | None:
 
     # Import into SW
     try:
-        from solidworks_2026_skill.sw_connect import VBR, VN
+        from solidworks_2026_skill.sw_session import VBR, VN
         sw.OpenDoc6(step_path, 3, 0, "", VBR(), VBR())  # 3=swDocPART
         model = sw.ActiveDoc
         # Save as SLDPRT alongside the STEP
@@ -174,7 +174,7 @@ def create_placeholder_and_record_miss(sw, name: str, out_dir: str,
         h = envelope.get("h", 10.0)
         with _placeholder_session(sw, name, out_dir) as s:
             s.sketch_on_plane()
-            s.rect_center(0, 0, w, d)
+            s.rect(0, 0, w, d)
             s.exit_sketch()
             s.extrude(h)
             s.check_faces(f"{name} 占位")
@@ -209,7 +209,7 @@ class _placeholder_session:
         return s
 
     def __exit__(self, *args):
-        from solidworks_2026_skill.sw_session import SW
+        from solidworks_2026_skill.sw_session import SW, VBR, VN
         # Save
         sldprt = os.path.join(self.out_dir, f"{self.name}.SLDPRT")
         step = os.path.join(self.out_dir, f"{self.name}.STEP")
@@ -221,8 +221,8 @@ class _placeholder_session:
                 except Exception:
                     pass
         try:
-            self.model.Extension.SaveAs(sldprt, 0, 0, None, None, 0, 0)
-            self.model.Extension.SaveAs(step, 0, 0, None, None, 0, 0)
+            self.model.Extension.SaveAs(sldprt, 0, 1, VN(), VBR(), VBR())
+            self.model.Extension.SaveAs(step, 0, 1, VN(), VBR(), VBR())
         except Exception:
             pass
         self._sw_session.__exit__(*args)

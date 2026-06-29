@@ -7,13 +7,13 @@ name = "solidworks-2026-skill"
 version = "1.0.0"
 description = "SolidWorks 2026 Python COM automation — part modeling, assembly, mates, verification & export"
 requires-python = ">=3.10"
-dependencies = ["pywin32>=305"]
+dependencies = ["pywin32>=305", "comtypes>=1.2.0"]
 
 [project.optional-dependencies]
 mcp = ["mcp>=1.0"]
 
 [project.scripts]
-sw-mcp = "mcp.server:main"
+sw-mcp = "solidworks_2026_skill.mcp.server:main"
 
 [tool.setuptools.packages.find]
 include = ["solidworks_2026_skill*"]
