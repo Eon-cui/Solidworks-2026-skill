@@ -38,9 +38,16 @@ with SW("MyPart") as s:
     s.exit_sketch()
     s.extrude(6)
     s.check_faces("base")
+    s.sketch_on_plane(("Front Plane",))
+    s.circle(0, 0, 10)
+    s.exit_sketch()
+    s.cut(through_all=True)
+    s.check_faces("hole")
     s.save(r".", "MyPart")
 
-ok, report = verify_step("MyPart.STEP", expected_holes=[(5.0, 1, "center hole")])
+ok, report = verify_step("MyPart.STEP",
+    expected_holes=[(5.0, 1, "center hole")],
+    max_circle=22)
 print(report)
 assert ok
 ```

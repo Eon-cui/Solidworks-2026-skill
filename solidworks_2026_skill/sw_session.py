@@ -87,17 +87,28 @@ class SW:
         print(f"   ✓ {label} faces={n}")
 
     # ── 选择 ──
-    def plane(self, names=("前视基准面", "Front Plane")):
+    def plane(self, names=("Front Plane", "Top Plane", "Right Plane",
+                        "前视基准面", "上视基准面", "右视基准面")):
         for nm in names:
             if self.ext.SelectByID2(nm, "PLANE", 0, 0, 0, False, 0, VN(), 0):
                 return
         raise RuntimeError(f"选基准面失败: {names}")
 
     def face(self, x, y, z, label=""):
-        """坐标选面 (mm)。⚠ 仅零件内可用; 点必须避开孔区、偏离面中心 20-30%。
-        装配体内禁用 — 视线射线拾取会选错面 (用 sw_mate 程序化选择)。"""
-        if not self.ext.SelectByID2("", "FACE", M(x), M(y), M(z), False, 0, VN(), 0):
-            raise RuntimeError(f"选面失败 {label} ({x},{y},{z})mm")
+        """坐标选面 (mm)。内置 13 点重试: 中心→4向偏置→8向偏置。
+        ⚠ 仅零件内可用; 装配体内禁用 (用 sw_mate 程序化选择)。"""
+        offsets = [
+            (0, 0, 0), (10, 0, 0), (-10, 0, 0), (0, 0, 10), (0, 0, -10),
+            (20, 0, 0), (-20, 0, 0), (0, 0, 20), (0, 0, -20),
+            (20, 0, 20), (-20, 0, -20), (20, 0, -20), (-20, 0, 20),
+        ]
+        for dx, dy, dz in offsets:
+            xx, yy, zz = M(x + dx), M(y + dy), M(z + dz)
+            if self.ext.SelectByID2("", "FACE", xx, yy, zz, False, 0, VN(), 0):
+                if dx != 0 or dy != 0 or dz != 0:
+                    print(f"     (face: offset ({dx},{dy},{dz})mm 命中)")
+                return
+        raise RuntimeError(f"Face selection failed: {label} at ({x},{y},{z})mm")
 
     # ── 草图 (毫米) ──
     def sketch_on_plane(self, names=("上视基准面", "Top Plane")):
@@ -106,6 +117,9 @@ class SW:
         self.model.ClearSelection2(True)
 
     def sketch_on_face(self, x, y, z, label=""):
+        """在零件面上开草图。⚠ Prefer sketch_on_plane() for new features.
+        This method uses coordinate ray-casting which may miss faces if the
+        point lands on a hole or edge. See troubleshooting.md §I for help."""
         self.model.ClearSelection2(True)
         self.face(x, y, z, label)
         self.model.InsertSketch2(True)

@@ -62,13 +62,17 @@ from solidworks_2026_skill.sw_session import SW
 from solidworks_2026_skill.sw_verify import verify_step
 
 with SW("MyPart") as s:                      # 自动: 清场 + 新建零件 + 退出关窗
-    s.sketch_on_plane(); s.circle(0, 0, 44); s.exit_sketch()
-    s.extrude(6);  s.check_faces("底盘")     # 面数追踪防假成功
-    s.sketch_on_face(0, 6, -16, "顶面"); s.circle(0, 0, 10); s.exit_sketch()
-    s.cut(6);      s.check_faces("中心孔")   # FeatureCut3 验证签名 + Dir 自动重试
+    s.sketch_on_plane(("Top Plane", "上视基准面"))
+    s.circle(0, 0, 88); s.exit_sketch()
+    s.extrude(6);  s.check_faces("base disc")    # 面数追踪防假成功
+    s.sketch_on_plane(("Front Plane", "前视基准面"))
+    s.circle(0, 0, 10); s.exit_sketch()
+    s.cut(through_all=True); s.check_faces("hole") # FeatureCut3 验证签名+自动重试
     s.save(r"D:\out", "MyPart")              # SLDPRT + STEP 成对
 
-ok, report = verify_step(r"D:\out\MyPart.STEP", expected_holes=[(5.0, 1, "φ10中心孔")], max_circle=22)
+ok, report = verify_step(r"D:\out\MyPart.STEP",
+    expected_holes=[(5.0, 1, "phi10 hole")],
+    max_circle=44)
 print(report); assert ok
 ```
 
